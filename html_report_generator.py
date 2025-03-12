@@ -1,7 +1,6 @@
 import os
 import json
 import datetime
-import glob
 
 def generate_html_report(summary: list, output_dir: str, model_name: str, system_prompt: str):
     """生成HTML报告文件

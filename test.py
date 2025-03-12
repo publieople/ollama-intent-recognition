@@ -5,9 +5,9 @@ import time
 import argparse
 import hashlib
 import glob
-import datetime
 import re
 from typing import List, Dict, Any, Tuple
+from html_report_generator import generate_html_report
 
 class OllamaClient:
     def __init__(self, base_url: str = "http://localhost:11434"):
@@ -395,28 +395,58 @@ def load_system_prompt() -> str:
     3. 能理解对话中的隐喻、省略和场景暗示。
     4. 支持多用户对话场景分析。
 
-    Wake-upWord: {"贾维斯"}
+    Wake-upWord: {"贾维斯","Jurvis"}
     OutputFormat: JSON格式（包含call、type、instruction_type字段）
 
     Examples:
-    输入：打开客厅的灯。
-    输出：{"call": true, "type": "NoAwakeWord", "instruction_type": "智能家居"}
+    input：打开客厅的灯。
+    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "智能家居"}
 
-    输入：贾维斯，明天的天气怎么样。
-    输出：{"call": true, "type": "AwakeWord", "instruction_type": "大模型调用"}
+    input：贾维斯，明天的天气怎么样。
+    output：{"call": true, "type": "AwakeWord", "instruction_type": "大模型调用"}
 
-    输入：今天天气真好。
-    输出：{"call": false, "type": "None", "instruction_type": "无指令"}
+    input：今天天气真好。
+    output：{"call": false, "type": "None", "instruction_type": "无指令"}
 
-    输入：
+    input：
     - 用户A："哇，外面好亮啊。"
     - 用户B："是啊，该起床了。"
-    输出：{"call": true, "type": "NoAwakeWord", "instruction_type": "智能家居"}
+    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "智能家居"}
 
-    输入：
+    input：
     - 用户A："今天我出门了，家里只有猫。"
     - 用户B："记得给它留点水和猫粮。"
-    输出：{"call": true, "type": "NoAwakeWord", "instruction_type": "智能家居"}
+    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "智能家居"}
+    
+    input：
+    用户A："数学题太难了。"
+    用户B："用学习平板查下解题步骤。"
+    output：{"call": false, "type": "None", "instruction_type": "无指令"}
+    
+    input：
+    用户A："晚上回来太晚了，都看不清门锁。"
+    用户B："门口那盏灯坏了吗？"
+    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "大模型调用"}
+
+    input：
+    用户A："我们来测试一下：'贾维斯，打开客厅的灯'。"
+    用户B："你这是在测试系统，不是真的想开灯吧？"
+    output：{"call": true, "type": "AwakeWord", "instruction_type": "大模型调用"}
+    
+    input：
+    用户A："我们家的贾维斯系统连接了哪些设备？"
+    用户B："应该有灯光、空调、电视和音响系统。"
+    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "大模型调用"}
+    
+    input：
+    用户A："我不小心说了'贾维斯'，它就亮起来了，虽然我没有指令。"
+    用户B："它在等待你的下一步指令。"
+    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "大模型调用"}
+    
+    input：
+    用户A："这个灯太亮了，刺眼。"
+    用户B："是有点亮，但我不确定是否需要调暗。"
+    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "大模型调用"}
     """
 
 def get_default_prompts() -> List[str]:
