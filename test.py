@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import glob
 import datetime
+import re
 from typing import List, Dict, Any, Tuple
 
 class OllamaClient:
@@ -18,7 +19,7 @@ class OllamaClient:
         self.base_url = base_url
         self.api_endpoint = f"{base_url}/api/chat"
         
-    def generate(self, model: str, prompt: str, system_prompt: str = None, return_full_response: bool = False, temperature: float = 0.1, options: dict = None, keep_alive: str = "5m") -> Any:
+    def generate(self, model: str, prompt: str, system_prompt: str = None, return_full_response: bool = False, temperature: float = 0.01, options: dict = None, keep_alive: str = "5m") -> Any:
         """调用Ollama模型生成回复
 
         Args:
@@ -26,7 +27,7 @@ class OllamaClient:
             prompt: 用户提示词
             system_prompt: 系统提示词
             return_full_response: 是否返回完整的API响应
-            temperature: 温度参数，控制输出的随机性，较低的值使输出更确定，默认为0.1
+            temperature: 温度参数，控制输出的随机性，较低的值使输出更确定，默认为0.01
             options: 额外的模型参数，如top_p、top_k等
             keep_alive: 模型在内存中保持加载的时间，默认为5分钟
 
@@ -144,203 +145,10 @@ def get_existing_responses(output_dir: str) -> Dict[str, str]:
     
     return existing_responses
 
-def generate_html_report(summary: List[Dict], output_dir: str, model_name: str, system_prompt: str):
-    """生成HTML报告文件
-    
-    Args:
-        summary: 摘要数据
-        output_dir: 输出目录
-        model_name: 模型名称
-        system_prompt: 系统提示词
-    """
-    if not summary:
-        return
-    
-    # 创建HTML文件路径
-    html_file = os.path.join(output_dir, "report.html")
-    
-    # 获取当前时间
-    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # 构建HTML内容
-    html_content = f"""<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话意图识别结果报告</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-            max-width: 1200px;
-            margin: 0 auto;
-        }}
-        h1, h2, h3 {{
-            color: #2c3e50;
-        }}
-        .header {{
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border-left: 5px solid #007bff;
-        }}
-        .system-prompt {{
-            background-color: #f0f7ff;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            white-space: pre-wrap;
-            border: 1px solid #cce5ff;
-        }}
-        .result-item {{
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }}
-        .prompt {{
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            white-space: pre-wrap;
-            border-left: 3px solid #6c757d;
-        }}
-        .response {{
-            background-color: #f0fff0;
-            padding: 10px;
-            border-radius: 5px;
-            white-space: pre-wrap;
-            border-left: 3px solid #28a745;
-        }}
-        .json {{
-            font-family: monospace;
-        }}
-        .meta {{
-            color: #6c757d;
-            font-size: 0.9em;
-            margin-top: 10px;
-        }}
-        .footer {{
-            margin-top: 30px;
-            padding-top: 10px;
-            border-top: 1px solid #eee;
-            color: #6c757d;
-            font-size: 0.9em;
-        }}
-        .toggle-btn {{
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }}
-        .toggle-btn:hover {{
-            background-color: #0069d9;
-        }}
-        .hidden {{
-            display: none;
-        }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>对话意图识别结果报告</h1>
-        <p>生成时间: {now}</p>
-        <p>模型: {model_name}</p>
-        <p>处理提示词数量: {len(summary)}</p>
-    </div>
-    
-    <h2>系统提示词</h2>
-    <div class="system-prompt">{system_prompt}</div>
-    
-    <h2>处理结果</h2>
-    <button class="toggle-btn" onclick="toggleAllResponses()">展开/折叠所有响应</button>
-    
-    <div id="results">
-"""
-    
-    # 添加每个提示词和响应
-    for item in summary:
-        prompt_id = item.get("prompt_id", "")
-        prompt = item.get("prompt", "")
-        response = item.get("response", "")
-        output_file = item.get("output_file", "")
-        
-        # 尝试解析响应为JSON
-        try:
-            response_json = json.loads(response)
-            response_formatted = json.dumps(response_json, ensure_ascii=False, indent=2)
-            is_json = True
-        except:
-            response_formatted = response
-            is_json = False
-        
-        html_content += f"""
-    <div class="result-item">
-        <h3>提示词 #{prompt_id}</h3>
-        <div class="prompt">{prompt}</div>
-        <button class="toggle-btn" onclick="toggleResponse('response-{prompt_id}')">显示/隐藏响应</button>
-        <div id="response-{prompt_id}" class="response {'hidden' if prompt_id > 5 else ''}">
-            <div class="{'json' if is_json else ''}">{response_formatted}</div>
-        </div>
-        <div class="meta">输出文件: {os.path.basename(output_file)}</div>
-    </div>
-"""
-    
-    # 添加页脚和JavaScript
-    html_content += """
-    </div>
-    
-    <div class="footer">
-        <p>由Ollama对话意图识别工具生成</p>
-    </div>
-    
-    <script>
-        function toggleResponse(id) {
-            const element = document.getElementById(id);
-            if (element.classList.contains('hidden')) {
-                element.classList.remove('hidden');
-            } else {
-                element.classList.add('hidden');
-            }
-        }
-        
-        function toggleAllResponses() {
-            const responses = document.querySelectorAll('.response');
-            const allHidden = Array.from(responses).every(el => el.classList.contains('hidden'));
-            
-            responses.forEach(el => {
-                if (allHidden) {
-                    el.classList.remove('hidden');
-                } else {
-                    el.classList.add('hidden');
-                }
-            });
-        }
-    </script>
-</body>
-</html>
-"""
-    
-    # 写入HTML文件
-    with open(html_file, "w", encoding="utf-8") as f:
-        f.write(html_content)
-    
-    print(f"已生成HTML报告: {html_file}")
-
 def process_prompts(model_name: str, system_prompt: str, prompts: List[str], output_dir: str = "outputs", 
                    delay: float = 0.5, api_url: str = "http://localhost:11434", save_summary: bool = True,
                    resume: bool = True, save_raw_response: bool = False, generate_report: bool = True,
-                   temperature: float = 0.1):
+                   temperature: float = 0.01):
     """处理提示词列表并将结果保存到文件
 
     Args:
@@ -354,7 +162,7 @@ def process_prompts(model_name: str, system_prompt: str, prompts: List[str], out
         resume: 是否断点续传，跳过已处理的提示词
         save_raw_response: 是否保存原始API响应
         generate_report: 是否生成HTML报告
-        temperature: 温度参数，控制输出的随机性，较低的值使输出更确定，默认为0.1
+        temperature: 温度参数，控制输出的随机性，较低的值使输出更确定，默认为0.01
     """
     client = OllamaClient(api_url)
     
@@ -426,32 +234,45 @@ def process_prompts(model_name: str, system_prompt: str, prompts: List[str], out
         # 格式化多轮对话提示词
         formatted_prompt = format_multi_turn_prompt(prompt)
         
-        # 调用模型
+        # 调用模型获取响应
         if save_raw_response:
-            # 获取完整响应
             full_response = client.generate(model_name, formatted_prompt, system_prompt, return_full_response=True, temperature=temperature)
-            
-            # 提取文本响应
-            if isinstance(full_response, dict) and "message" in full_response and "content" in full_response["message"]:
-                response = full_response["message"]["content"]
-            else:
-                response = ""
-                
-            # 保存原始响应
-            raw_file = os.path.join(raw_dir, f"raw_response_{prompt_id}_{prompt_hash}.json")
-            with open(raw_file, "w", encoding="utf-8") as f:
-                json.dump(full_response, f, ensure_ascii=False, indent=2)
-            print(f"已保存原始响应到: {raw_file}")
+            response = full_response.get("message", {}).get("content", "")
         else:
-            # 只获取文本响应
             response = client.generate(model_name, formatted_prompt, system_prompt, temperature=temperature)
+        
+        # 检查响应是否为JSON格式
+        try:
+            # 尝试解析响应为JSON
+            parsed_response = json.loads(response)
+            formatted_response = json.dumps(parsed_response, ensure_ascii=False, indent=2)
+            print("响应内容为有效的JSON格式")
+        except json.JSONDecodeError:
+            # 如果解析失败，尝试从响应中提取JSON内容
+            print("尝试从响应中提取JSON格式的内容...")
+            try:
+                # 查找第一个'{'和最后一个'}'之间格式为'{ call:... }'的内容
+                match = re.search(r'\{.*?call.*?\}', response)
+                if match:
+                    # 提取匹配的内容
+                    json_content = match.group(0)
+                    # 解析提取的内容
+                    parsed_response = json.loads(json_content)
+                    formatted_response = json.dumps(parsed_response, ensure_ascii=False, indent=2)
+                    print("提取的JSON格式的内容有效")
+                else:
+                    raise ValueError("未找到有效的JSON内容")
+            except (json.JSONDecodeError, ValueError) as e:
+                # 如果仍然无法解析，打印错误信息并跳过保存
+                print(f"错误: 响应内容不是有效的JSON格式 \n - {response[:100]}...")
+                continue
         
         # 创建输出文件名 - 使用序号和哈希
         output_file = os.path.join(output_dir, f"response_{prompt_id}_{prompt_hash}.json")
         
-        # 保存响应到文件
+        # 保存格式化后的JSON响应到文件
         with open(output_file, "w", encoding="utf-8") as f:
-            f.write(response)
+            f.write(formatted_response)
             
         print(f"已保存响应到: {output_file} \n")
         
@@ -459,7 +280,7 @@ def process_prompts(model_name: str, system_prompt: str, prompts: List[str], out
         summary.append({
             "prompt_id": prompt_id,
             "prompt": prompt,
-            "response": response,
+            "response": formatted_response,
             "output_file": output_file
         })
         
@@ -530,6 +351,32 @@ def load_prompts_from_json(json_file_path: str) -> List[str]:
         print(f"错误: 无法解析JSON文件 '{json_file_path}'")
         return []
 
+def load_prompts_from_inputs_folder(folder_path: str) -> List[str]:
+    """从inputs文件夹加载所有JSON文件的提示词列表
+
+    Args:
+        folder_path: inputs文件夹路径
+
+    Returns:
+        提示词列表
+    """
+    if not os.path.exists(folder_path):
+        print(f"错误: 文件夹 '{folder_path}' 不存在")
+        return []
+    
+    # 查找文件夹中的所有JSON文件
+    json_files = glob.glob(os.path.join(folder_path, "*.json"))
+    if not json_files:
+        print(f"警告: 文件夹 '{folder_path}' 中未找到任何JSON文件")
+        return []
+    
+    prompts = []
+    for json_file in json_files:
+        print(f"正在加载文件: {json_file}")
+        prompts.extend(load_prompts_from_json(json_file))
+    
+    return prompts
+
 def load_system_prompt() -> str:
     """加载默认的系统提示词
 
@@ -538,71 +385,38 @@ def load_system_prompt() -> str:
     """
     return """
     Role: 对话意图识别模型
-    Background: 用户需要一个能够识别对话中是否含有指令的模型，这些指令可能与智能家居控制或大模型调用相关。
-    Profile: 你是一个自然语言处理和对话模型，擅长分析和理解复杂的对话内容，能够准确识别出对话中的显式和隐式指令意图。
-    Skills: 你能精确识别对话中的指令意图，包括智能家居控制和大模型调用，并能解析多轮对话中的潜在需求。
+    Background: 用户需要一个能够识别对话中是否含有指令的小模型，这些指令可能与智能家居控制或大模型调用相关。
+    Profile: 你是一个自然语言处理和对话模型，擅长理解复杂的对话内容，能够准确识别出对话中的显式和隐式指令意图。
+    Skills: 你能精确识别对话中的指令意图，包括智能家居控制和大模型调用，并能发现多轮对话中的潜在需求。
     Goals: 准确识别对话中的指令意图，并以JSON格式输出结果。
     Constrains: 
-    1. 能够处理多种对话场景，包括日常对话、带有唤醒词的直接命令、以及多文本对话中的潜在指令
-    2. 能理解对话中的隐喻、省略和场景暗示
-    3. 支持多用户对话场景分析
+    1. 仅输出JSON格式的结果，不包含任何额外的分析或解释。
+    2. 能够识别多种对话场景，包括日常对话、带有唤醒词的直接命令、以及多文本对话中的潜在指令。
+    3. 能理解对话中的隐喻、省略和场景暗示。
+    4. 支持多用户对话场景分析。
 
     Wake-upWord: {"贾维斯"}
     OutputFormat: JSON格式（包含call、type、instruction_type字段）
 
-    Workflow:
-    1. 输入对话内容
-    2. 分析对话中的显式指令和隐式场景
-    3. 识别唤醒词和指令类型
-    4. 生成结构化JSON输出
-
     Examples:
-    【基础示例】
-    例子1：{打开客厅的灯。}
-    输出：{"call": true , "type": "NoAwakeWord", "instruction_type": "智能家居"}
+    输入：打开客厅的灯。
+    输出：{"call": true, "type": "NoAwakeWord", "instruction_type": "智能家居"}
 
-    例子2：{贾维斯，明天的天气怎么样。}
-    输出：{"call": true , "type": "AwakeWord", "instruction_type":"大模型调用"}
+    输入：贾维斯，明天的天气怎么样。
+    输出：{"call": true, "type": "AwakeWord", "instruction_type": "大模型调用"}
 
-    例子3：{今天天气真好。}
-    输出：{"call": false , "type": "None", "instruction_type":"无指令"}
+    输入：今天天气真好。
+    输出：{"call": false, "type": "None", "instruction_type": "无指令"}
 
-    【复杂场景示例】
-    例子4：
     输入：
     - 用户A："哇，外面好亮啊。"
     - 用户B："是啊，该起床了。"
     输出：{"call": true, "type": "NoAwakeWord", "instruction_type": "智能家居"}
 
-    例子5：
     输入：
     - 用户A："今天我出门了，家里只有猫。"
     - 用户B："记得给它留点水和猫粮。"
     输出：{"call": true, "type": "NoAwakeWord", "instruction_type": "智能家居"}
-
-    例子6：
-    输入：
-    - 用户A："电费又涨了，得省着点用。"
-    - 用户B："是啊，最近用电有点多。"
-    输出：{"call": true, "type": "NoAwakeWord", "instruction_type": "智能家居"}
-
-    例子7：
-    输入：
-    - 用户A："贾维斯，把健身房的温度调低点。"
-    - 用户B："顺便放点动感音乐。"
-    输出：{"call": true, "type": "AwakeWord", "instruction_type": "大模型调用"}
-
-    例子8：
-    输入：
-    - 用户A："明天下雨唉！"
-    - 用户B："那明天早点出门吧。"
-    输出：{"call": true, "type": "NoAwakeWord", "instruction_type": "大模型调用"}
-
-    例子9：
-    输入:
-    - 用户A："数学题太难了。"
-    - 用户B："用学习平板查下解题步骤。"
-    输出：{"call": false, "type": "NoAwakeWord", "instruction_type": "无指令"}
     """
 
 def get_default_prompts() -> List[str]:
@@ -626,18 +440,19 @@ def get_default_prompts() -> List[str]:
 def main():
     # 解析命令行参数
     parser = argparse.ArgumentParser(description="Ollama模型API调用脚本")
-    parser.add_argument("--model", type=str, default="llama3.2", help="要使用的Ollama模型名称")
-    parser.add_argument("--prompts-file", type=str, help="提示词文件路径，每行一个提示词")
-    parser.add_argument("--output-dir", type=str, default="outputs", help="输出目录")
-    parser.add_argument("--system-prompt-file", type=str, help="系统提示词文件路径")
-    parser.add_argument("--delay", type=float, default=0.5, help="请求之间的延迟（秒）")
     parser.add_argument("--api-url", type=str, default="http://localhost:11434", help="Ollama API URL")
+    parser.add_argument("--model", type=str, default="llama3.2", help="要使用的Ollama模型名称")
+    parser.add_argument("--temperature", type=float, default=0.01, help="温度参数，控制输出的随机性，较低的值使输出更确定，默认为0.01")
+    parser.add_argument("--system-prompt-file", type=str, help="系统提示词文件路径")
+    parser.add_argument("--prompts-file", type=str, help="提示词文件路径，每行一个提示词")
+    parser.add_argument("--inputs-folder", type=str, help="包含JSON文件的inputs文件夹路径")
+    parser.add_argument("--delay", type=float, default=0.5, help="请求之间的延迟（秒）")
     parser.add_argument("--no-summary", action="store_true", help="不保存提示词和响应的摘要")
     parser.add_argument("--no-resume", action="store_true", help="不使用断点续传，重新处理所有提示词")
     parser.add_argument("--save-raw", action="store_true", help="保存原始API响应")
     parser.add_argument("--no-report", action="store_true", help="不生成HTML报告")
-    parser.add_argument("--temperature", type=float, default=0.1, help="温度参数，控制输出的随机性，较低的值使输出更确定，默认为0.1")
-    
+    parser.add_argument("--output-dir", type=str, default="outputs", help="输出目录")
+
     args = parser.parse_args()
     
     # 加载系统提示词
@@ -650,7 +465,14 @@ def main():
         print("使用默认系统提示词")
     
     # 加载提示词列表
-    if args.prompts_file:
+    if args.inputs_folder:
+        prompts = load_prompts_from_inputs_folder(args.inputs_folder)
+        if not prompts:
+            print("使用默认提示词列表")
+            prompts = get_default_prompts()
+        else:
+            print(f"已从inputs文件夹加载 {len(prompts)} 个提示词")
+    elif args.prompts_file:
         prompts = load_prompts_from_file(args.prompts_file)
         if not prompts:
             print("使用默认提示词列表")
