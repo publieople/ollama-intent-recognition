@@ -251,8 +251,8 @@ def process_prompts(model_name: str, system_prompt: str, prompts: List[str], out
             # 如果解析失败，尝试从响应中提取JSON内容
             print("尝试从响应中提取JSON格式的内容...")
             try:
-                # 查找第一个'{'和最后一个'}'之间格式为'{ call:... }'的内容
-                match = re.search(r'\{.*?call.*?\}', response)
+                # 查找第一个'{'和最后一个'}'之间的JSON内容，更宽松的匹配
+                match = re.search(r'\{[\s\S]*?\}', response, re.IGNORECASE)
                 if match:
                     # 提取匹配的内容
                     json_content = match.group(0)
@@ -471,12 +471,12 @@ def main():
     # 解析命令行参数
     parser = argparse.ArgumentParser(description="Ollama模型API调用脚本")
     parser.add_argument("--api-url", type=str, default="http://localhost:11434", help="Ollama API URL")
-    parser.add_argument("--model", type=str, default="llama3.2", help="要使用的Ollama模型名称")
+    parser.add_argument("--model", type=str, default="qwen2.5-coder:3b", help="要使用的Ollama模型名称")
     parser.add_argument("--temperature", type=float, default=0.01, help="温度参数，控制输出的随机性，较低的值使输出更确定，默认为0.01")
     parser.add_argument("--system-prompt-file", type=str, help="系统提示词文件路径")
     parser.add_argument("--prompts-file", type=str, help="提示词文件路径，每行一个提示词")
     parser.add_argument("--inputs-folder", type=str, help="包含JSON文件的inputs文件夹路径")
-    parser.add_argument("--delay", type=float, default=0.5, help="请求之间的延迟（秒）")
+    parser.add_argument("--delay", type=float, default=0.1, help="请求之间的延迟（秒）")
     parser.add_argument("--no-summary", action="store_true", help="不保存提示词和响应的摘要")
     parser.add_argument("--no-resume", action="store_true", help="不使用断点续传，重新处理所有提示词")
     parser.add_argument("--save-raw", action="store_true", help="保存原始API响应")
