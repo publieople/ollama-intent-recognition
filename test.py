@@ -87,34 +87,6 @@ class OllamaClient:
                 return {"error": str(e)}
             return ""
 
-def format_multi_turn_prompt(prompt: str) -> str:
-    """格式化多轮对话提示词
-    
-    将多行对话格式化为更清晰的格式，便于模型理解
-    
-    Args:
-        prompt: 原始提示词，可能包含多行对话
-        
-    Returns:
-        格式化后的提示词
-    """
-    # 检查是否是多轮对话（包含用户A/B标识）
-    if "用户A" in prompt or "用户B" in prompt:
-        # 已经是多轮对话格式，保持不变
-        return prompt
-    
-    # 检查是否有多行但没有用户标识
-    lines = prompt.strip().split('\n')
-    if len(lines) > 1:
-        # 添加用户标识
-        formatted_lines = []
-        for i, line in enumerate(lines):
-            user = "用户A" if i % 2 == 0 else "用户B"
-            formatted_lines.append(f"{user}：{line}")
-        return "\n".join(formatted_lines)
-    
-    # 单行提示词，保持不变
-    return prompt
 
 def get_existing_responses(output_dir: str) -> Dict[str, str]:
     """获取已存在的响应文件
@@ -231,15 +203,13 @@ def process_prompts(model_name: str, system_prompt: str, prompts: List[str], out
             except Exception as e:
                 print(f"读取现有响应时出错: {e}")
         
-        # 格式化多轮对话提示词
-        formatted_prompt = format_multi_turn_prompt(prompt)
         
         # 调用模型获取响应
         if save_raw_response:
-            full_response = client.generate(model_name, formatted_prompt, system_prompt, return_full_response=True, temperature=temperature)
+            full_response = client.generate(model_name, prompt, system_prompt, return_full_response=True, temperature=temperature)
             response = full_response.get("message", {}).get("content", "")
         else:
-            response = client.generate(model_name, formatted_prompt, system_prompt, temperature=temperature)
+            response = client.generate(model_name, prompt, system_prompt, temperature=temperature)
         
         # 检查响应是否为JSON格式
         try:
@@ -324,7 +294,7 @@ def load_prompts_from_json(json_file_path: str) -> List[str]:
     """从JSON文件加载提示词列表
 
     Args:
-        json_file_path: JSON文件路径
+        json_file_path: JSON文件路径，支持数据集.json格式
 
     Returns:
         提示词列表
@@ -337,11 +307,19 @@ def load_prompts_from_json(json_file_path: str) -> List[str]:
         with open(json_file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
             
-        if isinstance(data, list):
-            # 如果JSON是列表格式，直接使用
+        # 处理数据集.json格式
+        if isinstance(data, list) and all(isinstance(item, dict) and "dialog" in item for item in data):
+            print(f"检测到对话数据集格式: {json_file_path}")
+            prompts = []
+            for item in data:
+                # 将每个对话转换为JSON字符串作为提示词
+                prompts.append(json.dumps(item, ensure_ascii=False))
+            return prompts
+        # 处理普通列表格式
+        elif isinstance(data, list):
             return [str(item) for item in data if item]
+        # 处理字典格式
         elif isinstance(data, dict) and "prompts" in data:
-            # 如果JSON是字典格式且包含prompts字段
             prompts = data.get("prompts", [])
             return [str(item) for item in prompts if item]
         else:
@@ -395,58 +373,260 @@ def load_system_prompt() -> str:
     3. 能理解对话中的隐喻、省略和场景暗示。
     4. 支持多用户对话场景分析。
 
-    Wake-upWord: {"贾维斯","Jurvis"}
-    OutputFormat: JSON格式（包含call、type、instruction_type字段）
+    WakeupWord: {"小爱"}
+    OutputFormat: JSON格式（仅包含has_command字段）
 
     Examples:
-    input：打开客厅的灯。
-    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "智能家居"}
-
-    input：贾维斯，明天的天气怎么样。
-    output：{"call": true, "type": "AwakeWord", "instruction_type": "大模型调用"}
-
-    input：今天天气真好。
-    output：{"call": false, "type": "None", "instruction_type": "无指令"}
-
-    input：
-    - 用户A："哇，外面好亮啊。"
-    - 用户B："是啊，该起床了。"
-    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "智能家居"}
-
-    input：
-    - 用户A："今天我出门了，家里只有猫。"
-    - 用户B："记得给它留点水和猫粮。"
-    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "智能家居"}
-    
-    input：
-    用户A："数学题太难了。"
-    用户B："用学习平板查下解题步骤。"
-    output：{"call": false, "type": "None", "instruction_type": "无指令"}
-    
-    input：
-    用户A："晚上回来太晚了，都看不清门锁。"
-    用户B："门口那盏灯坏了吗？"
-    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "大模型调用"}
-
-    input：
-    用户A："我们来测试一下：'贾维斯，打开客厅的灯'。"
-    用户B："你这是在测试系统，不是真的想开灯吧？"
-    output：{"call": true, "type": "AwakeWord", "instruction_type": "大模型调用"}
-    
-    input：
-    用户A："我们家的贾维斯系统连接了哪些设备？"
-    用户B："应该有灯光、空调、电视和音响系统。"
-    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "大模型调用"}
-    
-    input：
-    用户A："我不小心说了'贾维斯'，它就亮起来了，虽然我没有指令。"
-    用户B："它在等待你的下一步指令。"
-    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "大模型调用"}
-    
-    input：
-    用户A："这个灯太亮了，刺眼。"
-    用户B："是有点亮，但我不确定是否需要调暗。"
-    output：{"call": true, "type": "NoAwakeWord", "instruction_type": "大模型调用"}
+[
+    {
+      "dialog": [
+        {
+          "speaker": "父亲",
+          "content": "今天天气这么好，咱们把窗户打开通通风吧。"
+        },
+        {
+          "speaker": "母亲",
+          "content": "好主意，顺便把空气净化器关掉。"
+        }
+      ],
+        "has_command": true
+    },
+    {
+      "dialog": [
+        {
+          "speaker": "女儿",
+          "content": "妈妈，我今天考试得了95分！"
+        },
+        {
+          "speaker": "母亲",
+          "content": "太棒了，宝贝！晚上给你做你最爱吃的红烧鸡翅。"
+        }
+      ],
+        "has_command": false
+    },
+    {
+      "dialog": [
+        {
+          "speaker": "父亲",
+          "content": "明天早上有个重要的会议，我得早点出门。"
+        },
+        {
+          "speaker": "母亲",
+          "content": "几点呀？"
+        },
+        {
+            "speaker":"父亲",
+            "content":"早上七点吧"
+        }
+      ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+          {
+            "speaker": "母亲",
+            "content": "最近感觉眼睛有点干涩，是不是用眼过度了？"
+          },
+          {
+            "speaker": "父亲",
+            "content": "可能是，多休息休息，少看手机。"
+          }
+    ],
+        "has_command": false
+    },
+    {
+      "dialog": [
+        {
+          "speaker": "儿子",
+          "content": "客厅的电视声音太小了，听不清。"
+        },
+        {
+          "speaker": "父亲",
+          "content": "那可以把音量调大一点。"
+        }
+      ],
+      "has_command": true
+    },
+    {
+        "dialog": [
+          {
+            "speaker": "父亲",
+            "content": "最近新闻里说，那个新电影很不错。"
+          },
+          {
+            "speaker": "儿子",
+            "content": "是吗？我周末去看看。"
+          }
+        ],
+        "has_command": false
+    },
+    {
+      "dialog": [
+        {
+          "speaker": "女儿",
+          "content": "卧室有点冷，能开一下暖气吗？"
+        },
+        {
+          "speaker": "母亲",
+          "content": "好的，我这就去开。"
+        }
+      ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+          {
+            "speaker": "父亲",
+            "content": "你觉得湖人今年能拿总冠军吗?"
+          },
+          {
+            "speaker": "儿子",
+            "content": "我觉得包可以的！"
+          }
+        ],
+        "has_command": false
+      },
+    {
+      "dialog": [
+        {
+          "speaker": "母亲",
+          "content": "下周我们要去奶奶家，记得提前买点水果。"
+        }
+      ],
+        "has_command": true
+    },
+    {
+      "dialog": [
+        {
+          "speaker": "母亲",
+          "content": "最近感觉腰酸背痛的，是不是该去做个按摩了？"
+        },
+        {
+          "speaker": "父亲",
+          "content": "可以呀，我帮你预约一下。"
+        }
+      ],
+        "has_command": false
+    },
+    {
+      "dialog": [
+        {
+          "speaker": "女儿",
+          "content": "今天天气这么好，咱们把阳台的花浇一下吧。"
+        },
+        {
+          "speaker": "母亲",
+          "content": "可是前两天应该浇过了吧"
+        }
+      ],
+        "has_command": true
+    },
+    {
+      "dialog": [
+        {
+          "speaker": "父亲",
+          "content": "最近小区里新开了一个健身房，我打算去办个卡。"
+        },
+        {
+          "speaker": "母亲",
+          "content": "挺好的，锻炼身体很重要。"
+        }
+      ],
+        "has_command": false
+    },
+    {
+      "dialog": [
+        {
+          "speaker": "儿子",
+          "content": "卧室的空调风太大了，吹的人脑袋疼"
+        }
+      ],
+        "has_command": true
+    },
+    {
+      "dialog": [
+        {
+          "speaker": "女儿",
+          "content": "我最近总是感觉肚子疼，是不是吃坏东西了？"
+        },
+        {
+          "speaker": "父亲",
+          "content": "要不咱们去医院看看吧。"
+        }
+    ],
+        "has_command": false
+    },
+    {
+      "dialog": [
+        {
+          "speaker": "母亲",
+          "content": "今天天气不太好，记得把阳台的窗户关上。"
+        }
+      ],
+        "has_command": true
+    },
+    {
+      "dialog": [
+        {
+          "speaker": "父亲",
+          "content": "最近新闻里说，那个新餐厅的菜很不错。"
+        },
+        {
+          "speaker": "母亲",
+          "content": "是吗？有空咱们去尝尝。"
+        }
+      ],
+        "has_command": false
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "儿子",
+                "content": "卧室的灯好像有点暗，这样看书有点伤眼睛"
+            },
+            {
+                "speaker": "父亲",
+                "content": "你也可以早点休息"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "女儿",
+                "content": "客厅的音乐声音太吵了，能小声点吗？"
+            },
+            {
+                "speaker": "父亲",
+                "content": "好，我马上调低音量。"
+            }
+        ],
+        "has_command": false
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "父亲",
+                "content": "今天天气不错，把窗帘拉开吧。"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "母亲",
+                "content": "今天超市打折，要不要一起去买东西？"
+            },
+            {
+                "speaker": "儿子",
+                "content": "好呀，我正好需要买点零食。"
+            }
+        ],
+        "has_command": false
+    }
+]
     """
 
 def get_default_prompts() -> List[str]:
@@ -476,6 +656,7 @@ def main():
     parser.add_argument("--system-prompt-file", type=str, help="系统提示词文件路径")
     parser.add_argument("--prompts-file", type=str, help="提示词文件路径，每行一个提示词")
     parser.add_argument("--inputs-folder", type=str, help="包含JSON文件的inputs文件夹路径")
+    parser.add_argument("--dataset-file", type=str, help="特定的数据集文件路径，例如data/数据集.json")
     parser.add_argument("--delay", type=float, default=0.1, help="请求之间的延迟（秒）")
     parser.add_argument("--no-summary", action="store_true", help="不保存提示词和响应的摘要")
     parser.add_argument("--no-resume", action="store_true", help="不使用断点续传，重新处理所有提示词")
@@ -495,7 +676,15 @@ def main():
         print("使用默认系统提示词")
     
     # 加载提示词列表
-    if args.inputs_folder:
+    if args.dataset_file:
+        # 直接从特定数据集文件加载
+        prompts = load_prompts_from_json(args.dataset_file)
+        if prompts:
+            print(f"已从数据集文件加载 {len(prompts)} 个提示词: {args.dataset_file}")
+        else:
+            print("从数据集文件加载提示词失败，使用默认提示词列表")
+            prompts = get_default_prompts()
+    elif args.inputs_folder:
         prompts = load_prompts_from_inputs_folder(args.inputs_folder)
         if not prompts:
             print("使用默认提示词列表")
