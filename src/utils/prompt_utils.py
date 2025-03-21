@@ -58,8 +58,10 @@ def load_prompts_from_json(json_file_path: str) -> List[str]:
             logger.info(f"检测到对话数据集格式: {json_file_path}")
             prompts = []
             for item in data:
-                # 将每个对话转换为JSON字符串作为提示词
-                prompts.append(json.dumps(item, ensure_ascii=False))
+                # 只将对话内容作为提示词，不包含has_command字段
+                dialog_only = {"dialog": item["dialog"]}
+                logger.debug(f"处理对话数据: {dialog_only}")
+                prompts.append(json.dumps(dialog_only, ensure_ascii=False))
             return prompts
         # 处理普通列表格式
         elif isinstance(data, list):

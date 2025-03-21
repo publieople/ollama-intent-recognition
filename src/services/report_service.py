@@ -9,6 +9,9 @@ import datetime
 import logging
 from typing import List, Dict, Any, Optional
 
+# 导入评估工具
+from ..utils.evaluation_utils import evaluate_model_predictions
+
 # 配置日志
 logger = logging.getLogger(__name__)
 
@@ -21,7 +24,8 @@ class ReportService:
         summary: List[Dict[str, Any]], 
         output_dir: str, 
         model_name: str, 
-        system_prompt: str
+        system_prompt: str,
+        dataset_file: Optional[str] = None
     ) -> Optional[str]:
         """生成HTML报告文件
         
@@ -30,6 +34,7 @@ class ReportService:
             output_dir: 输出目录
             model_name: 模型名称
             system_prompt: 系统提示词
+            dataset_file: 可选的数据集文件路径，用于评估
             
         Returns:
             生成的HTML报告文件路径，如果生成失败则返回None
@@ -39,6 +44,28 @@ class ReportService:
             return None
         
         try:
+            # 计算评估指标
+            evaluation_results = evaluate_model_predictions(summary, dataset_file)
+            metrics = evaluation_results.get("metrics", {})
+            confusion_matrix = evaluation_results.get("confusion_matrix", {})
+            valid_samples = evaluation_results.get("valid_samples", 0)
+            total_samples = evaluation_results.get("total_samples", len(summary))
+            
+            # 格式化评估指标
+            accuracy = metrics.get("accuracy", 0) * 100
+            precision = metrics.get("precision", 0) * 100
+            recall = metrics.get("recall", 0) * 100
+            f1 = metrics.get("f1", 0) * 100
+            
+            # 格式化混淆矩阵
+            tp = confusion_matrix.get("TP", 0)
+            fp = confusion_matrix.get("FP", 0)
+            tn = confusion_matrix.get("TN", 0)
+            fn = confusion_matrix.get("FN", 0)
+            
+            # 计算成功率
+            success_rate = ReportService._calculate_success_rate(summary)
+            
             # 创建HTML文件路径
             html_file = os.path.join(output_dir, "report.html")
             
@@ -139,6 +166,40 @@ class ReportService:
                 border-radius: 5px;
                 border-left: 3px solid #27ae60;
             }}
+            .metrics-table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin: 10px 0;
+            }}
+            .metrics-table th, .metrics-table td {{
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }}
+            .metrics-table th {{
+                background-color: #f2f2f2;
+                font-weight: bold;
+            }}
+            .metrics-container {{
+                background-color: #f0f8ff;
+                padding: 15px;
+                border-radius: 5px;
+                margin-top: 15px;
+                border-left: 3px solid #4169e1;
+            }}
+            .confusion-matrix {{
+                display: inline-block;
+                margin: 10px 0;
+                border-collapse: collapse;
+            }}
+            .confusion-matrix th, .confusion-matrix td {{
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: center;
+            }}
+            .confusion-matrix th {{
+                background-color: #f2f2f2;
+            }}
         </style>
     </head>
     <body>
@@ -155,7 +216,71 @@ class ReportService:
         <div class="summary-info">
             <h3>摘要统计</h3>
             <p>总处理数量: {len(summary)}</p>
-            <p>成功率: {ReportService._calculate_success_rate(summary)}%</p>
+            <p>有效评估样本: {valid_samples}/{len(summary)}</p>
+            <p>成功率: {success_rate}%</p>
+        </div>
+        
+        <div class="metrics-container">
+            <h3>模型评估指标</h3>
+            <div class="section">
+                <h2>统计信息</h2>
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">{len(summary)}</div>
+                        <div class="stat-label">总样本数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{success_rate}%</div>
+                        <div class="stat-label">JSON格式有效率</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>评估指标</h2>
+                <div class="eval-note">以下评估指标基于 {valid_samples}/{total_samples} 个有效样本计算</div>
+                <div class="metrics-container">
+                    <div class="metrics-section">
+                        <h3>主要指标</h3>
+                        <table class="metrics-table">
+                            <tr>
+                                <td>准确率 (Accuracy)</td>
+                                <td>{accuracy:.2f}%</td>
+                            </tr>
+                            <tr>
+                                <td>精确率 (Precision)</td>
+                                <td>{precision:.2f}%</td>
+                            </tr>
+                            <tr>
+                                <td>召回率 (Recall)</td>
+                                <td>{recall:.2f}%</td>
+                            </tr>
+                            <tr>
+                                <td>F1分数</td>
+                                <td>{f1:.2f}%</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="metrics-section">
+                        <h3>混淆矩阵</h3>
+                        <table class="confusion-matrix">
+                            <tr>
+                                <td></td>
+                                <td colspan="2"><strong>实际值</strong></td>
+                            </tr>
+                            <tr>
+                                <td rowspan="2"><strong>预测值</strong></td>
+                                <td>真正例 (TP): {tp}</td>
+                                <td>假正例 (FP): {fp}</td>
+                            </tr>
+                            <tr>
+                                <td>假负例 (FN): {fn}</td>
+                                <td>真负例 (TN): {tn}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <h2>处理结果</h2>

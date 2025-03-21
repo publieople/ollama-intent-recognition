@@ -24,6 +24,7 @@ from src.utils.prompt_utils import (
     load_prompts_from_inputs_folder, load_system_prompt,
     get_default_prompts
 )
+from src.utils.evaluation_utils import evaluate_model_predictions
 
 # 配置日志
 def setup_logging(log_level: str = "INFO", log_file: Optional[str] = None) -> None:
@@ -244,18 +245,70 @@ def main() -> None:
     logger.info("=" * 50)
     logger.info(f"处理完成，已处理 {result['processed_count']}/{result['total_count']} 个提示词")
     
+    # 计算模型评估指标
+    if processor_service.summary:
+        logger.info(f"开始计算模型评估指标...")
+        logger.info(f"摘要中包含 {len(processor_service.summary)} 个样本")
+        
+        # 准备评估数据和设置
+        dataset_file_path = args.dataset_file
+        if dataset_file_path:
+            logger.info(f"使用原始数据集文件进行评估: {dataset_file_path}")
+        else:
+            logger.info("未提供原始数据集文件，将尝试从摘要中提取评估数据")
+            
+        # 执行评估
+        evaluation_results = evaluate_model_predictions(
+            processor_service.summary,
+            dataset_file=dataset_file_path
+        )
+        metrics = evaluation_results.get("metrics", {})
+        confusion_matrix = evaluation_results.get("confusion_matrix", {})
+        valid_samples = evaluation_results.get("valid_samples", 0)
+        total_samples = evaluation_results.get("total_samples", 0)
+        
+        # 输出评估结果
+        logger.info("=" * 50)
+        logger.info("模型评估结果")
+        logger.info(f"有效评估样本: {valid_samples}/{total_samples}")
+        
+        # 输出混淆矩阵
+        if confusion_matrix:
+            logger.info("混淆矩阵:")
+            logger.info(f"  真正例 (TP): {confusion_matrix.get('TP', 0)}")
+            logger.info(f"  假正例 (FP): {confusion_matrix.get('FP', 0)}")
+            logger.info(f"  真负例 (TN): {confusion_matrix.get('TN', 0)}")
+            logger.info(f"  假负例 (FN): {confusion_matrix.get('FN', 0)}")
+        
+        # 输出主要评估指标
+        if metrics:
+            logger.info("评估指标:")
+            logger.info(f"  准确率 (Accuracy): {metrics.get('accuracy', 0)*100:.2f}%")
+            logger.info(f"  精确率 (Precision): {metrics.get('precision', 0)*100:.2f}%")
+            logger.info(f"  召回率 (Recall): {metrics.get('recall', 0)*100:.2f}%")
+            logger.info(f"  F1分数: {metrics.get('f1', 0)*100:.2f}%")
+        else:
+            logger.warning("未能计算评估指标，可能是因为没有找到有效的评估样本")
+            
+        logger.info("=" * 50)
+    
     # 生成HTML报告
     if settings.generate_report and processor_service.summary:
         report_path = ReportService.generate_html_report(
             processor_service.summary, 
             settings.output_dir, 
             settings.model_name, 
-            system_prompt
+            system_prompt,
+            dataset_file=args.dataset_file
         )
+        
         if report_path:
             logger.info(f"已生成HTML报告: {report_path}")
-    
-    logger.info("=" * 50)
+            logger.info(f"报告文件路径: {os.path.abspath(report_path)}")
+        else:
+            logger.error("生成HTML报告失败")
+            
+    logger.info("程序执行完成！")
 
 
 if __name__ == "__main__":
