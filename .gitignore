@@ -1,2 +1,51 @@
-*outputs*/
-*cache*
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 环境变量和配置
+.env
+.venv
+env/
+venv/
+ENV/
+.envrc
+
+# 输出和数据文件
+outputs*/
+*.log
+logs/
+
+# IDE和编辑器
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 测试
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# 系统文件
+.DS_Store
+Thumbs.db
