@@ -467,10 +467,22 @@ class ReportService:
                 font-size: 24px;
                 color: var(--primary-color);
                 cursor: pointer;
+                background: linear-gradient(to bottom, #ffffff, #f5f5f5);
                 border: 1px solid var(--primary-color);
-                border-radius: 4px;
-                padding: 0 8px;
-                line-height: 24px;
+                border-radius: 6px;
+                padding: 2px 10px;
+                line-height: 28px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                transition: all 0.2s ease;
+            }}
+            .toc::after:hover {{
+                background: linear-gradient(to bottom, #f5f5f5, #e8e8e8);
+                box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+            }}
+            .toc::after:active {{
+                background: #f0f0f0;
+                box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+                transform: translateY(1px);
             }}
             
             .toc h3 {{
