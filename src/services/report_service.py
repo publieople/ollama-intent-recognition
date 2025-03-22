@@ -80,165 +80,512 @@ class ReportService:
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>对话意图识别结果报告</title>
         <style>
+            /* 基础样式 */
+            :root {{
+                --primary-color: #4361ee;
+                --primary-light: #e7edff;
+                --success-color: #2ecc71;
+                --warning-color: #f39c12;
+                --danger-color: #e74c3c;
+                --grey-color: #6c757d;
+                --bg-color: #f9fafb;
+                --card-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                --border-radius: 8px;
+            }}
             body {{
-                font-family: Arial, sans-serif;
+                font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
                 line-height: 1.6;
                 margin: 0;
-                padding: 20px;
-                color: #333;
+                padding: 0;
+                color: #2d3748;
+                background-color: var(--bg-color);
+            }}
+            .container {{
                 max-width: 1200px;
                 margin: 0 auto;
-            }}
-            h1, h2, h3 {{
-                color: #2c3e50;
-            }}
-            .header {{
-                background-color: #f8f9fa;
                 padding: 20px;
-                border-radius: 5px;
+            }}
+            h1, h2, h3, h4 {{
+                color: #2c3e50;
+                margin-top: 1.5em;
+                margin-bottom: 0.8em;
+            }}
+            h1 {{
+                font-size: 2.2em;
+                border-bottom: 2px solid var(--primary-color);
+                padding-bottom: 10px;
+                margin-top: 0.5em;
+            }}
+            h2 {{
+                font-size: 1.8em;
+                border-left: 4px solid var(--primary-color);
+                padding-left: 10px;
+            }}
+            h3 {{
+                font-size: 1.4em;
+            }}
+            
+            /* 卡片样式 */
+            .card {{
+                background-color: white;
+                border-radius: var(--border-radius);
+                box-shadow: var(--card-shadow);
+                padding: 20px;
                 margin-bottom: 20px;
-                border-left: 5px solid #007bff;
+                overflow: hidden;
+                transition: all 0.3s ease;
             }}
-            .system-prompt {{
-                background-color: #f0f7ff;
-                padding: 15px;
-                border-radius: 5px;
-                margin-bottom: 20px;
-                white-space: pre-wrap;
-                border: 1px solid #cce5ff;
+            .card:hover {{
+                box-shadow: 0 8px 15px rgba(0,0,0,0.1);
             }}
-            .result-item {{
-                background-color: #fff;
-                padding: 15px;
-                border-radius: 5px;
-                margin-bottom: 15px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            }}
-            .prompt {{
-                background-color: #f8f9fa;
-                padding: 10px;
-                border-radius: 5px;
-                margin-bottom: 10px;
-                white-space: pre-wrap;
-                border-left: 3px solid #6c757d;
-            }}
-            .response {{
-                background-color: #f0fff0;
-                padding: 10px;
-                border-radius: 5px;
-                white-space: pre-wrap;
-                border-left: 3px solid #28a745;
-            }}
-            .json {{
-                font-family: monospace;
-            }}
-            .meta {{
-                color: #6c757d;
-                font-size: 0.9em;
-                margin-top: 10px;
-            }}
-            .footer {{
-                margin-top: 30px;
-                padding-top: 10px;
-                border-top: 1px solid #eee;
-                color: #6c757d;
-                font-size: 0.9em;
-            }}
-            .toggle-btn {{
-                background-color: #007bff;
+            
+            /* 页眉样式 */
+            .header-card {{
+                background-color: white;
+                background: linear-gradient(135deg, #4361ee, #3a0ca3);
                 color: white;
-                border: none;
-                padding: 5px 10px;
-                border-radius: 3px;
-                cursor: pointer;
+                padding: 25px;
+                border-radius: var(--border-radius);
+                margin-bottom: 25px;
+                position: relative;
+                overflow: hidden;
+            }}
+            .header-card h1 {{
+                color: white;
+                border-bottom: none;
+                margin-top: 0;
+            }}
+            .header-card p {{
+                opacity: 0.9;
+                margin: 8px 0;
+            }}
+            .header-card::before {{
+                content: "";
+                position: absolute;
+                top: -50%;
+                right: -50%;
+                width: 100%;
+                height: 100%;
+                background: rgba(255,255,255,0.1);
+                transform: rotate(30deg);
+                pointer-events: none;
+            }}
+            
+            /* 系统提示词样式 */
+            .system-prompt {{
+                background-color: var(--primary-light);
+                padding: 20px;
+                border-radius: var(--border-radius);
+                white-space: pre-wrap;
+                border-left: 4px solid var(--primary-color);
+                font-size: 0.95em;
+                overflow-x: auto;
+                max-height: 200px;
+                overflow-y: auto;
+                transition: max-height 0.3s ease;
+            }}
+            .system-prompt.expanded {{
+                max-height: 1000px;
+            }}
+            
+            /* 统计信息样式 */
+            .stats-container {{
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px;
+                margin-bottom: 20px;
+            }}
+            .stat-card {{
+                flex: 1;
+                min-width: 200px;
+                padding: 20px;
+                border-radius: var(--border-radius);
+                box-shadow: var(--card-shadow);
+                background-color: white;
+                text-align: center;
+                transition: transform 0.3s ease;
+            }}
+            .stat-card:hover {{
+                transform: translateY(-5px);
+            }}
+            .stat-value {{
+                font-size: 2.2em;
+                font-weight: bold;
+                color: var(--primary-color);
                 margin-bottom: 10px;
             }}
-            .toggle-btn:hover {{
-                background-color: #0069d9;
+            .stat-label {{
+                color: var(--grey-color);
+                font-size: 1em;
             }}
-            .hidden {{
-                display: none;
-            }}
-            .summary-info {{
+            
+            /* 评估指标样式 */
+            .metrics-container {{
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px;
                 margin-top: 20px;
-                background-color: #e9f7ef;
-                padding: 10px;
-                border-radius: 5px;
-                border-left: 3px solid #27ae60;
+            }}
+            .metrics-section {{
+                flex: 1;
+                min-width: 300px;
             }}
             .metrics-table {{
                 width: 100%;
                 border-collapse: collapse;
-                margin: 10px 0;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 0 0 1px #e2e8f0;
             }}
             .metrics-table th, .metrics-table td {{
-                border: 1px solid #ddd;
-                padding: 8px;
+                padding: 12px 15px;
                 text-align: left;
+                border-bottom: 1px solid #e2e8f0;
             }}
             .metrics-table th {{
-                background-color: #f2f2f2;
-                font-weight: bold;
+                background-color: #f8fafc;
+                font-weight: 600;
             }}
-            .metrics-container {{
-                background-color: #f0f8ff;
-                padding: 15px;
-                border-radius: 5px;
-                margin-top: 15px;
-                border-left: 3px solid #4169e1;
+            .metrics-table tr:last-child td {{
+                border-bottom: none;
             }}
+            .metrics-table tr:hover {{
+                background-color: #f8fafc;
+            }}
+            .metrics-table td:last-child {{
+                font-weight: 600;
+                color: var(--primary-color);
+            }}
+            
+            /* 混淆矩阵样式 */
             .confusion-matrix {{
-                display: inline-block;
-                margin: 10px 0;
-                border-collapse: collapse;
+                border-collapse: separate;
+                border-spacing: 0;
+                border-radius: var(--border-radius);
+                overflow: hidden;
+                box-shadow: var(--card-shadow);
+                margin: 15px 0;
+                width: 100%;
             }}
             .confusion-matrix th, .confusion-matrix td {{
-                border: 1px solid #ddd;
-                padding: 8px;
+                padding: 15px;
                 text-align: center;
+                border: 1px solid #e2e8f0;
             }}
             .confusion-matrix th {{
-                background-color: #f2f2f2;
+                background-color: #f8fafc;
+                font-weight: 600;
+            }}
+            .cm-header {{
+                background-color: #f1f5f9 !important;
+                color: #1e293b;
+            }}
+            .cm-tp {{
+                background-color: rgba(46, 204, 113, 0.15);
+            }}
+            .cm-fp {{
+                background-color: rgba(231, 76, 60, 0.15);
+            }}
+            .cm-fn {{
+                background-color: rgba(243, 156, 18, 0.15);
+            }}
+            .cm-tn {{
+                background-color: rgba(52, 152, 219, 0.15);
+            }}
+            
+            /* 结果列表样式 */
+            .result-item {{
+                background-color: white;
+                padding: 20px;
+                border-radius: var(--border-radius);
+                margin-bottom: 20px;
+                box-shadow: var(--card-shadow);
+                border-top: 4px solid var(--primary-color);
+                transition: all 0.3s ease;
+            }}
+            .result-item:hover {{
+                box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            }}
+            .result-item h3 {{
+                margin-top: 0;
+                color: var(--primary-color);
+                display: flex;
+                align-items: center;
+            }}
+            .prompt {{
+                background-color: #f8f9fa;
+                padding: 15px;
+                border-radius: 6px;
+                margin-bottom: 15px;
+                white-space: pre-wrap;
+                border-left: 3px solid var(--grey-color);
+                font-size: 0.95em;
+                overflow-x: auto;
+            }}
+            .response {{
+                background-color: #f0fff4;
+                padding: 15px;
+                border-radius: 6px;
+                white-space: pre-wrap;
+                border-left: 3px solid var(--success-color);
+                font-size: 0.95em;
+                overflow-x: auto;
+                transition: max-height 0.3s ease;
+            }}
+            .json {{
+                font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+                line-height: 1.5;
+            }}
+            .meta {{
+                margin-top: 15px;
+                color: var(--grey-color);
+                font-size: 0.9em;
+                display: flex;
+                align-items: center;
+            }}
+            .meta i {{
+                margin-right: 5px;
+            }}
+            
+            /* 按钮样式 */
+            .btn {{
+                display: inline-block;
+                background-color: var(--primary-color);
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.9em;
+                transition: all 0.2s ease;
+                text-decoration: none;
+                margin-right: 10px;
+                margin-bottom: 10px;
+            }}
+            .btn:hover {{
+                background-color: #3651d3;
+                transform: translateY(-2px);
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            }}
+            .btn-group {{
+                margin: 15px 0;
+            }}
+            
+            /* 底部样式 */
+            .footer {{
+                margin-top: 40px;
+                padding: 20px 0;
+                border-top: 1px solid #e2e8f0;
+                color: var(--grey-color);
+                font-size: 0.9em;
+                text-align: center;
+            }}
+            
+            /* 隐藏类 */
+            .hidden {{
+                display: none;
+            }}
+            
+            /* 响应式设计 */
+            @media (max-width: 768px) {{
+                .stats-container,
+                .metrics-container {{
+                    flex-direction: column;
+                }}
+                .stat-card {{
+                    width: 100%;
+                }}
+                .confusion-matrix {{
+                    font-size: 0.85em;
+                }}
+            }}
+            
+            /* 标签样式 */
+            .badge {{
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 50px;
+                font-size: 0.8em;
+                margin-left: 10px;
+            }}
+            .badge-success {{
+                background-color: rgba(46, 204, 113, 0.15);
+                color: #27ae60;
+            }}
+            .badge-error {{
+                background-color: rgba(231, 76, 60, 0.15);
+                color: #c0392b;
+            }}
+            
+            /* 图标样式 */
+            .icon {{
+                display: inline-block;
+                width: 18px;
+                height: 18px;
+                margin-right: 5px;
+                vertical-align: middle;
+            }}
+            
+            /* 目录样式 */
+            .toc {{
+                background-color: white;
+                border-radius: var(--border-radius);
+                box-shadow: var(--card-shadow);
+                padding: 20px;
+                margin-bottom: 20px;
+                width: 280px;
+                position: fixed;
+                top: 20px;
+                left: -240px;
+                z-index: 100;
+                max-height: calc(100vh - 40px);
+                overflow-y: auto;
+                transition: all 0.3s ease;
+            }}
+            .toc.visible {{
+                left: 20px;
+            }}
+            .toc::after {{
+                content: "≡";
+                position: absolute;
+                right: 15px;
+                top: 10px;
+                font-size: 24px;
+                color: var(--primary-color);
+                cursor: pointer;
+            }}
+            
+            .toc h3 {{
+                margin-top: 0;
+                margin-bottom: 15px;
+                color: var(--primary-color);
+            }}
+            .toc-list {{
+                list-style-type: none;
+                padding: 0;
+                margin: 0;
+            }}
+            .toc-item {{
+                padding: 5px 0;
+                border-bottom: 1px solid #f0f0f0;
+            }}
+            .toc-item:last-child {{
+                border-bottom: none;
+            }}
+            .toc-link {{
+                color: #333;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                transition: all 0.2s ease;
+            }}
+            .toc-link:hover {{
+                color: var(--primary-color);
+            }}
+            .toc-link .badge {{
+                margin-left: 10px;
+                font-size: 0.7em;
+            }}
+            .toc-link.active {{
+                color: var(--primary-color);
+                font-weight: bold;
+            }}
+            
+            /* 页面左侧区域，用于触发目录显示 */
+            .page-edge-trigger {{
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 5%;
+                height: 100%;
+                z-index: 90;
+            }}
+            
+            /* 主内容区域 */
+            .main-content {{
+                margin-left: 80px;
+                transition: margin-left 0.3s ease;
+            }}
+            .main-content.toc-expanded {{
+                margin-left: 320px;
+            }}
+            
+            /* 响应式布局 */
+            @media (max-width: 1200px) {{
+                .main-content {{
+                    margin-left: 0;
+                }}
+                .toc {{
+                    left: -280px;
+                }}
+                .toc.visible {{
+                    left: 0;
+                }}
+                .main-content.toc-expanded {{
+                    margin-left: 0;
+                }}
+            }}
+            
+            /* 动画效果 */
+            @keyframes fadeIn {{
+                from {{ opacity: 0; transform: translateY(20px); }}
+                to {{ opacity: 1; transform: translateY(0); }}
+            }}
+            .animate-fade-in {{
+                animation: fadeIn 0.5s ease forwards;
             }}
         </style>
     </head>
     <body>
-        <div class="header">
-            <h1>对话意图识别结果报告</h1>
-            <p>生成时间: {now}</p>
-            <p>模型: {model_name}</p>
-            <p>处理提示词数量: {len(summary)}</p>
+        <div class="page-edge-trigger" id="page-trigger"></div>
+        
+        <div class="toc" id="report-toc">
+            <h3>报告目录</h3>
+            <ul class="toc-list">
+                <li class="toc-item"><a href="#header" class="toc-link">报告头部</a></li>
+                <li class="toc-item"><a href="#system-prompt" class="toc-link">系统提示词</a></li>
+                <li class="toc-item"><a href="#stats-summary" class="toc-link">摘要统计</a></li>
+                <li class="toc-item"><a href="#model-metrics" class="toc-link">模型评估指标</a></li>
+                <li class="toc-item"><a href="#results" class="toc-link">处理结果 <span class="badge badge-success">{len(summary)}</span></a></li>
+            </ul>
         </div>
         
-        <h2>系统提示词</h2>
-        <div class="system-prompt">{system_prompt}</div>
-        
-        <div class="summary-info">
-            <h3>摘要统计</h3>
-            <p>总处理数量: {len(summary)}</p>
-            <p>有效评估样本: {valid_samples}/{len(summary)}</p>
-            <p>成功率: {success_rate}%</p>
-        </div>
-        
-        <div class="metrics-container">
-            <h3>模型评估指标</h3>
-            <div class="section">
-                <h2>统计信息</h2>
-                <div class="summary-stats">
-                    <div class="stat-item">
-                        <div class="stat-value">{len(summary)}</div>
-                        <div class="stat-label">总样本数</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">{success_rate}%</div>
-                        <div class="stat-label">JSON格式有效率</div>
-                    </div>
+        <div class="main-content">
+            <div class="header-card" id="header">
+                <h1>对话意图识别结果报告</h1>
+                <p><strong>生成时间:</strong> {now}</p>
+                <p><strong>模型:</strong> {model_name}</p>
+                <p><strong>处理提示词数量:</strong> {len(summary)}</p>
+            </div>
+            
+            <div class="card" id="system-prompt">
+                <h2>系统提示词
+                    <button class="btn" onclick="toggleSystemPrompt()">展开/折叠</button>
+                </h2>
+                <div class="system-prompt" id="system-prompt-content">{system_prompt}</div>
+            </div>
+            
+            <h2 id="stats-summary">摘要统计</h2>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-value">{len(summary)}</div>
+                    <div class="stat-label">总处理数量</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{valid_samples}</div>
+                    <div class="stat-label">有效评估样本</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{success_rate}%</div>
+                    <div class="stat-label">成功率</div>
                 </div>
             </div>
             
-            <div class="section">
-                <h2>评估指标</h2>
+            <div class="card" id="model-metrics">
+                <h2>模型评估指标</h2>
                 <div class="eval-note">以下评估指标基于 {valid_samples}/{total_samples} 个有效样本计算</div>
+                
                 <div class="metrics-container">
                     <div class="metrics-section">
                         <h3>主要指标</h3>
@@ -261,97 +608,237 @@ class ReportService:
                             </tr>
                         </table>
                     </div>
+                    
                     <div class="metrics-section">
                         <h3>混淆矩阵</h3>
                         <table class="confusion-matrix">
                             <tr>
-                                <td></td>
-                                <td colspan="2"><strong>实际值</strong></td>
+                                <th class="cm-header"></th>
+                                <th class="cm-header" colspan="2"><strong>实际值</strong></th>
                             </tr>
                             <tr>
-                                <td rowspan="2"><strong>预测值</strong></td>
-                                <td>真正例 (TP): {tp}</td>
-                                <td>假正例 (FP): {fp}</td>
+                                <th class="cm-header" rowspan="2"><strong>预测值</strong></th>
+                                <td class="cm-tp">真正例 (TP): {tp}</td>
+                                <td class="cm-fp">假正例 (FP): {fp}</td>
                             </tr>
                             <tr>
-                                <td>假负例 (FN): {fn}</td>
-                                <td>真负例 (TN): {tn}</td>
+                                <td class="cm-fn">假负例 (FN): {fn}</td>
+                                <td class="cm-tn">真负例 (TN): {tn}</td>
                             </tr>
                         </table>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <h2>处理结果</h2>
-        <button class="toggle-btn" onclick="toggleAllResponses()">展开/折叠所有响应</button>
-        
-        <div id="results">
+            
+            <h2 id="results">处理结果</h2>
+            <div class="btn-group">
+                <button class="btn" onclick="toggleAllResponses()">展开/折叠所有响应</button>
+                <button class="btn" onclick="filterResults('all')">显示全部</button>
+                <button class="btn" onclick="filterResults('json')">仅显示有效JSON</button>
+                <button class="btn" onclick="filterResults('non-json')">仅显示无效JSON</button>
+            </div>
+            
+            <div id="results-container">
     """
             
-            # 添加每个提示词和响应
-            for item in summary:
-                prompt_id = item.get("prompt_id", "")
-                prompt = item.get("prompt", "")
-                response = item.get("response", "")
-                output_file = item.get("output_file", "")
+            # 处理summary中的每个响应
+            valid_json_responses = []
+            invalid_json_responses = []
+            
+            for i, entry in enumerate(summary):
+                prompt = entry['prompt']
+                response = entry['response']
+                latency = entry.get('latency', 'N/A')
+                tokens = entry.get('tokens', 'N/A')
+                is_json = entry.get('is_json', False)
                 
-                # 尝试解析响应为JSON
-                try:
-                    # 如果已经是字符串形式的JSON，解析它
-                    if isinstance(response, str):
-                        response_json = json.loads(response)
-                    else:
-                        response_json = response
-                    
-                    response_formatted = json.dumps(response_json, ensure_ascii=False, indent=2)
-                    is_json = True
-                except:
-                    response_formatted = response if isinstance(response, str) else str(response)
-                    is_json = False
+                if is_json:
+                    badge_class = "badge-success"
+                    badge_text = "有效JSON"
+                    valid_json_responses.append(i)
+                else:
+                    badge_class = "badge-error"
+                    badge_text = "无效JSON"
+                    invalid_json_responses.append(i)
                 
                 html_content += f"""
-        <div class="result-item">
-            <h3>提示词 #{prompt_id}</h3>
-            <div class="prompt">{prompt}</div>
-            <button class="toggle-btn" onclick="toggleResponse('response-{prompt_id}')">显示/隐藏响应</button>
-            <div id="response-{prompt_id}" class="response {'hidden' if prompt_id > 5 else ''}">
-                <div class="{'json' if is_json else ''}">{response_formatted}</div>
+                <div class="result-item" id="result-{i}" data-type="{('json' if is_json else 'non-json')}">
+                    <h3>提示词 #{i+1} <span class="badge {badge_class}">{badge_text}</span></h3>
+                    <div class="prompt">{prompt}</div>
+                    <h3>
+                        响应
+                        <button class="btn" onclick="toggleResponse('response-{i}')">展开/折叠</button>
+                    </h3>
+                    <div class="response hidden" id="response-{i}">{response}</div>
+                    <div class="meta">
+                        <span><strong>延迟:</strong> {latency}秒</span> | 
+                        <span><strong>Tokens:</strong> {tokens}</span>
+                    </div>
+                </div>
+                """
+            
+            # 添加目录项目
+            toc_script = """
+            // 动态生成目录中的结果项
+            const tocList = document.querySelector('.toc-list');
+            const validResSection = document.createElement('li');
+            validResSection.className = 'toc-item';
+            validResSection.innerHTML = '<strong>有效JSON响应:</strong>';
+            tocList.appendChild(validResSection);
+            
+            """
+            
+            # 添加有效JSON响应到目录
+            for i in valid_json_responses:
+                toc_script += f"""
+                const validItem{i} = document.createElement('li');
+                validItem{i}.className = 'toc-item';
+                validItem{i}.innerHTML = '<a href="#result-{i}" class="toc-link">提示词 #{i+1} <span class="badge badge-success">有效</span></a>';
+                tocList.appendChild(validItem{i});
+                """
+            
+            # 添加无效JSON响应到目录
+            toc_script += """
+            const invalidResSection = document.createElement('li');
+            invalidResSection.className = 'toc-item';
+            invalidResSection.innerHTML = '<strong>无效JSON响应:</strong>';
+            tocList.appendChild(invalidResSection);
+            
+            """
+            
+            for i in invalid_json_responses:
+                toc_script += f"""
+                const invalidItem{i} = document.createElement('li');
+                invalidItem{i}.className = 'toc-item';
+                invalidItem{i}.innerHTML = '<a href="#result-{i}" class="toc-link">提示词 #{i+1} <span class="badge badge-error">无效</span></a>';
+                tocList.appendChild(invalidItem{i});
+                """
+            
+            # 关闭HTML并添加JavaScript功能
+            html_content += f"""
             </div>
-            <div class="meta">输出文件: {os.path.basename(output_file) if output_file else '未保存'}</div>
+
         </div>
-    """
-            
-            # 添加页脚和JavaScript
-            html_content += """
-        </div>
-        
-        <div class="footer">
-            <p>由Ollama对话意图识别工具生成</p>
-        </div>
-        
+
         <script>
-            function toggleResponse(id) {
+            // 功能: 切换响应显示/隐藏
+            function toggleResponse(id) {{
                 const element = document.getElementById(id);
-                if (element.classList.contains('hidden')) {
-                    element.classList.remove('hidden');
-                } else {
-                    element.classList.add('hidden');
-                }
-            }
+                element.classList.toggle('hidden');
+            }}
             
-            function toggleAllResponses() {
+            // 功能: 切换系统提示词显示/隐藏
+            function toggleSystemPrompt() {{
+                const element = document.getElementById('system-prompt-content');
+                element.classList.toggle('expanded');
+            }}
+            
+            // 功能: 展开/折叠所有响应
+            function toggleAllResponses() {{
                 const responses = document.querySelectorAll('.response');
-                const allHidden = Array.from(responses).every(el => el.classList.contains('hidden'));
+                const allHidden = Array.from(responses).every(r => r.classList.contains('hidden'));
                 
-                responses.forEach(el => {
-                    if (allHidden) {
-                        el.classList.remove('hidden');
-                    } else {
-                        el.classList.add('hidden');
-                    }
-                });
-            }
+                responses.forEach(response => {{
+                    if(allHidden) {{
+                        response.classList.remove('hidden');
+                    }} else {{
+                        response.classList.add('hidden');
+                    }}
+                }});
+            }}
+            
+            // 功能: 筛选结果
+            function filterResults(filter) {{
+                const results = document.querySelectorAll('.result-item');
+                
+                results.forEach(result => {{
+                    if(filter === 'all') {{
+                        result.style.display = 'block';
+                    }} else if(filter === 'json' && result.dataset.type === 'json') {{
+                        result.style.display = 'block';
+                    }} else if(filter === 'non-json' && result.dataset.type === 'non-json') {{
+                        result.style.display = 'block';
+                    }} else {{
+                        result.style.display = 'none';
+                    }}
+                }});
+            }}
+            
+            // 功能: 目录控制
+            document.addEventListener('DOMContentLoaded', function() {{
+                const toc = document.getElementById('report-toc');
+                const mainContent = document.querySelector('.main-content');
+                const pageTrigger = document.getElementById('page-trigger');
+                
+                // 鼠标进入左侧区域时展开目录
+                pageTrigger.addEventListener('mouseenter', function() {{
+                    toc.classList.add('visible');
+                    if(window.innerWidth > 1200) {{
+                        mainContent.classList.add('toc-expanded');
+                    }}
+                }});
+                
+                // 鼠标离开目录区域时折叠目录
+                toc.addEventListener('mouseleave', function(e) {{
+                    // 确保鼠标真的离开了目录区域
+                    if (e.relatedTarget !== pageTrigger) {{
+                        toc.classList.remove('visible');
+                        mainContent.classList.remove('toc-expanded');
+                    }}
+                }});
+                
+                // 点击目录中的菜单图标固定/取消固定目录显示
+                toc.addEventListener('click', function(e) {{
+                    // 识别点击的是否是菜单图标区域
+                    const rect = toc.getBoundingClientRect();
+                    if (e.clientX > rect.right - 40) {{
+                        toc.classList.toggle('visible');
+                        mainContent.classList.toggle('toc-expanded');
+                    }}
+                }});
+                
+                // 滚动监听，高亮当前位置的目录项
+                const sections = document.querySelectorAll('h2[id], .result-item[id]');
+                const tocLinks = document.querySelectorAll('.toc-link');
+                
+                window.addEventListener('scroll', function() {{
+                    let current = '';
+                    
+                    sections.forEach(section => {{
+                        const sectionTop = section.offsetTop;
+                        const sectionHeight = section.clientHeight;
+                        if(pageYOffset >= (sectionTop - 150)) {{
+                            current = section.getAttribute('id');
+                        }}
+                    }});
+                    
+                    tocLinks.forEach(link => {{
+                        link.classList.remove('active');
+                        if(link.getAttribute('href') === `#${{current}}`) {{
+                            link.classList.add('active');
+                        }}
+                    }});
+                }});
+                
+                // 平滑滚动到锚点
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {{
+                    anchor.addEventListener('click', function (e) {{
+                        e.preventDefault();
+                        
+                        const targetId = this.getAttribute('href');
+                        const targetElement = document.querySelector(targetId);
+                        
+                        if (targetElement) {{
+                            window.scrollTo({{
+                                top: targetElement.offsetTop - 20,
+                                behavior: 'smooth'
+                            }});
+                        }}
+                    }});
+                }});
+                
+                {toc_script}
+            }});
         </script>
     </body>
     </html>

@@ -25,6 +25,7 @@ from src.utils.prompt_utils import (
     get_default_prompts
 )
 from src.utils.evaluation_utils import evaluate_model_predictions
+from src.utils.report_utils import open_report_in_browser
 
 # 配置日志
 def setup_logging(log_level: str = "INFO", log_file: Optional[str] = None) -> None:
@@ -98,6 +99,8 @@ def parse_arguments() -> argparse.Namespace:
                       help="保存原始API响应")
     parser.add_argument("--no-report", action="store_true", 
                       help="不生成HTML报告")
+    parser.add_argument("--open-report", action="store_true", 
+                      help="生成报告后自动在浏览器中打开")
     
     # 日志设置
     parser.add_argument("--log-level", type=str, default="INFO", 
@@ -139,6 +142,7 @@ def update_settings_from_args(args: argparse.Namespace) -> None:
     settings.resume_from_checkpoint = not args.no_resume
     settings.save_raw_response = args.save_raw
     settings.generate_report = not args.no_report
+    settings.open_report = args.open_report
     
     # 设置输入文件夹路径（如果提供）
     if args.inputs_folder:
@@ -314,6 +318,13 @@ def main() -> None:
         if report_path:
             logger.info(f"已生成HTML报告: {report_path}")
             logger.info(f"报告文件路径: {os.path.abspath(report_path)}")
+            
+            # 如果启用了自动打开报告选项，则在浏览器中打开报告
+            if settings.open_report:
+                if open_report_in_browser(report_path):
+                    logger.info("已在浏览器中打开报告")
+                else:
+                    logger.warning("无法在浏览器中打开报告")
         else:
             logger.error("生成HTML报告失败")
             

@@ -34,6 +34,7 @@ class Settings:
         self.resume_from_checkpoint: bool = True
         self.save_raw_response: bool = False
         self.generate_report: bool = True
+        self.open_report: bool = False
     
     def update(self, **kwargs) -> None:
         """更新配置参数
