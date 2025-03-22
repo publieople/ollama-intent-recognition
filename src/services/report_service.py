@@ -467,6 +467,10 @@ class ReportService:
                 font-size: 24px;
                 color: var(--primary-color);
                 cursor: pointer;
+                border: 1px solid var(--primary-color);
+                border-radius: 4px;
+                padding: 0 8px;
+                line-height: 24px;
             }}
             
             .toc h3 {{
