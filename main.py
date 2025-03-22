@@ -68,6 +68,10 @@ def parse_arguments() -> argparse.Namespace:
                       help="要使用的Ollama模型名称")
     parser.add_argument("--temperature", type=float, default=0.01, 
                       help="温度参数，控制输出的随机性，较低的值使输出更确定，默认为0.01")
+    parser.add_argument("--top-p", type=float, default=0.9,
+                      help="top-p参数，控制输出的多样性，较低的值会使模型更保守，默认为0.9")
+    parser.add_argument("--precision-bias", type=float, default=0.0,
+                      help="精确度偏差值，正值偏向非指令(降低假正例)，负值偏向指令，范围-1.0到1.0，默认为0")
     
     # 输入设置
     parser.add_argument("--system-prompt-file", type=str, 
@@ -110,10 +114,10 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def update_settings_from_args(args: argparse.Namespace) -> None:
-    """从命令行参数更新设置
+    """根据命令行参数更新全局设置
     
     Args:
-        args: 命令行参数
+        args: 解析后的命令行参数
     """
     # 更新API设置
     settings.api_url = args.api_url
@@ -122,6 +126,8 @@ def update_settings_from_args(args: argparse.Namespace) -> None:
     # 更新模型设置
     settings.model_name = args.model
     settings.temperature = args.temperature
+    settings.top_p = args.top_p
+    settings.precision_bias = args.precision_bias
     
     # 更新输出设置
     if args.output_dir:
@@ -184,6 +190,9 @@ def main() -> None:
     logger.info(f"当前配置: ")
     logger.info(f"  - API URL: {settings.api_url}")
     logger.info(f"  - 模型: {settings.model_name}")
+    logger.info(f"  - 温度: {settings.temperature}")
+    logger.info(f"  - Top-P: {settings.top_p}")
+    logger.info(f"  - 精确度偏差: {settings.precision_bias} (正值降低假正例)")
     logger.info(f"  - 输出目录: {settings.output_dir}")
     logger.info("=" * 50)
     

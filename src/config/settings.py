@@ -19,6 +19,8 @@ class Settings:
         # 模型设置
         self.model_name: str = "qwen2.5-coder:3b"
         self.temperature: float = 0.01
+        self.top_p: float = 0.9
+        self.precision_bias: float = 0.0
         self.keep_alive: str = "5m"
         self.model_options: Dict[str, Any] = {}
         

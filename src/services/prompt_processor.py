@@ -125,7 +125,9 @@ class PromptProcessorService:
                         prompt, 
                         system_prompt, 
                         return_full_response=True, 
-                        temperature=settings.temperature
+                        temperature=settings.temperature,
+                        top_p=settings.top_p,
+                        precision_bias=settings.precision_bias
                     )
                     response = full_response.get("message", {}).get("content", "")
                     
@@ -140,7 +142,9 @@ class PromptProcessorService:
                         model_name, 
                         prompt, 
                         system_prompt, 
-                        temperature=settings.temperature
+                        temperature=settings.temperature,
+                        top_p=settings.top_p,
+                        precision_bias=settings.precision_bias
                     )
                 
                 # 处理响应内容，确保是JSON格式

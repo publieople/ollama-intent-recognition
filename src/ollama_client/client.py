@@ -35,6 +35,8 @@ class OllamaClient:
                 system_prompt: Optional[str] = None, 
                 return_full_response: bool = False, 
                 temperature: float = 0.01, 
+                top_p: float = 0.9,
+                precision_bias: float = 0.0,
                 options: Optional[Dict[str, Any]] = None, 
                 keep_alive: str = "5m") -> Any:
         """调用Ollama模型生成回复
@@ -45,6 +47,8 @@ class OllamaClient:
             system_prompt: 系统提示词
             return_full_response: 是否返回完整的API响应
             temperature: 温度参数，控制输出的随机性，较低的值使输出更确定，默认为0.01
+            top_p: top-p参数，控制输出的多样性，较低的值会使模型更保守，默认为0.9
+            precision_bias: 精确度偏差值，正值偏向非指令(降低假正例)，负值偏向指令，范围-1.0到1.0，默认为0
             options: 额外的模型参数，如top_p、top_k等
             keep_alive: 模型在内存中保持加载的时间，默认为5分钟
 
@@ -82,12 +86,13 @@ class OllamaClient:
         if options is None:
             options = {}
         options["temperature"] = temperature
+        options["top_p"] = top_p
             
         # 如果有其他选项，添加到payload
         if options:
             payload["options"] = options
         
-        logger.debug(f"调用Ollama API，模型: {model}, 温度: {temperature}")
+        logger.debug(f"调用Ollama API，模型: {model}, 温度: {temperature}, top_p: {top_p}, 精确度偏差: {precision_bias}")
         
         try:
             response = requests.post(self.api_endpoint, json=payload)
@@ -100,7 +105,33 @@ class OllamaClient:
             
             # 从响应中提取回复内容
             if "message" in result and "content" in result["message"]:
-                return result["message"]["content"]
+                content = result["message"]["content"]
+                
+                # 应用精确度偏差（如果设置）
+                if precision_bias != 0.0 and content:
+                    # 尝试解析JSON并应用偏差
+                    try:
+                        import json
+                        content_json = json.loads(content)
+                        if "has_command" in content_json:
+                            # 如果precision_bias为正值，增加判定为非指令的可能性
+                            # 如果为负值，增加判定为指令的可能性
+                            if precision_bias > 0 and content_json["has_command"]:
+                                # 将部分指令判定为非指令（降低假正例）
+                                if precision_bias > 0.8 or (precision_bias > 0.3 and "dialog" in content_json):
+                                    content_json["has_command"] = False
+                                    content = json.dumps(content_json, ensure_ascii=False)
+                                    logger.debug("应用精确度偏差，将指令重判为非指令")
+                            elif precision_bias < 0 and not content_json["has_command"]:
+                                # 将部分非指令判定为指令（降低假负例）
+                                if precision_bias < -0.8 or (precision_bias < -0.3 and "dialog" in content_json):
+                                    content_json["has_command"] = True
+                                    content = json.dumps(content_json, ensure_ascii=False)
+                                    logger.debug("应用精确度偏差，将非指令重判为指令")
+                    except Exception as e:
+                        logger.debug(f"应用精确度偏差失败: {e}")
+                
+                return content
             else:
                 logger.warning("API响应中未找到预期的回复内容")
                 return ""
