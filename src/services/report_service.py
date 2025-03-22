@@ -44,6 +44,20 @@ class ReportService:
             return None
         
         try:
+            # 处理每个条目的JSON有效性
+            for item in summary:
+                response = item.get("response", "")
+                try:
+                    if isinstance(response, str):
+                        json.loads(response)
+                        item['is_json'] = True
+                    elif isinstance(response, (dict, list)):  # 如果已经是Python对象，也视为有效JSON
+                        item['is_json'] = True
+                    else:
+                        item['is_json'] = False
+                except:
+                    item['is_json'] = False
+
             # 计算评估指标
             evaluation_results = evaluate_model_predictions(summary, dataset_file)
             metrics = evaluation_results.get("metrics", {})
@@ -648,8 +662,9 @@ class ReportService:
             for i, entry in enumerate(summary):
                 prompt = entry['prompt']
                 response = entry['response']
-                latency = entry.get('latency', 'N/A')
-                tokens = entry.get('tokens', 'N/A')
+                # 确保latency和tokens有默认值，并转换为字符串显示
+                latency = str(entry.get('latency', 'N/A'))
+                tokens = str(entry.get('tokens', 'N/A'))
                 is_json = entry.get('is_json', False)
                 
                 if is_json:
@@ -875,7 +890,9 @@ class ReportService:
             try:
                 if isinstance(response, str):
                     json.loads(response)
-                valid_json_count += 1
+                    valid_json_count += 1
+                elif isinstance(response, (dict, list)):  # 如果已经是Python对象，也视为有效JSON
+                    valid_json_count += 1
             except:
                 continue
                 
