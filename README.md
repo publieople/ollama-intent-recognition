@@ -6,40 +6,144 @@
 
 ```
 .
-├── main.py                 # 主入口文件
-├── requirements.txt        # 依赖包列表
-├── pytest.ini              # pytest配置文件
-├── src/                    # 源代码目录
-│   ├── config/             # 配置模块
+├── ollama_intent.py              # 新的主入口文件
+├── html_report_generator.py      # HTML报告生成器工具
+├── requirements.txt              # 依赖包列表
+├── system.txt                    # 系统提示词文件
+├── prompts.txt                   # 默认提示词文件
+├── pytest.ini                    # pytest配置文件
+├── mypy.ini                      # mypy配置文件
+├── src/                          # 源代码目录
+│   ├── cli/                      # 命令行接口模块
 │   │   ├── __init__.py
-│   │   ├── .env.example    # 环境变量示例
-│   │   └── settings.py     # 应用程序配置
-│   ├── ollama_client/      # Ollama客户端模块
+│   │   ├── arguments.py          # 命令行参数处理
+│   │   ├── logging_setup.py      # 日志配置
+│   │   └── app.py                # 应用程序入口
+│   ├── config/                   # 配置模块
 │   │   ├── __init__.py
-│   │   └── client.py       # Ollama API客户端
-│   ├── services/           # 服务模块
+│   │   ├── .env.example          # 环境变量示例
+│   │   ├── settings.py           # 应用程序配置
+│   │   └── logging_config.py     # 日志配置
+│   ├── ollama_client/            # Ollama客户端模块
+│   │   ├── __init__.py
+│   │   └── client.py             # Ollama API客户端
+│   ├── services/                 # 服务模块
 │   │   ├── __init__.py
 │   │   ├── prompt_processor.py   # 提示词处理服务
 │   │   └── report_service.py     # 报告生成服务
-│   └── utils/              # 工具函数模块
+│   ├── templates/                # 模板模块
+│   │   ├── __init__.py
+│   │   └── report_template.py    # HTML报告模板
+│   └── utils/                    # 工具函数模块
 │       ├── __init__.py
-│       ├── file_utils.py   # 文件处理工具
-│       ├── prompt_utils.py # 提示词处理工具
-│       ├── evaluation_utils.py # 评估工具
-│       └── report_utils.py # 报告生成工具
-├── scripts/                # 辅助脚本
-│   └── run_tests.py        # 测试执行脚本
-├── tests/                  # 测试目录
+│       ├── file_utils.py         # 文件处理工具
+│       ├── prompt_utils.py       # 提示词处理工具
+│       ├── evaluation_utils.py   # 评估工具
+│       └── report_utils.py       # 报告生成工具
+├── scripts/                      # 辅助脚本
+│   └── run_tests.py              # 测试执行脚本
+├── tests/                        # 测试目录
 │   ├── __init__.py
-│   ├── test_ollama_client.py     # Ollama客户端测试
-│   └── ...                       # 其他测试文件
-├── data/                   # 数据目录
-│   └── ...                 # 各种数据集文件
-├── inputs/                 # 输入目录
-│   └── ...                 # 输入JSON文件
-└── outputs/                # 输出目录
-    └── ...                 # 生成的响应和报告
+│   └── test_ollama_client.py     # Ollama客户端测试
+├── data/                         # 数据目录
+│   └── ...                       # 各种数据集文件
+├── inputs/                       # 输入目录
+│   └── ...                       # 输入JSON文件
+└── outputs/                      # 输出目录
+    └── ...                       # 生成的响应和报告
 ```
+
+## 最近更新 [0.5.0] - 2024-03-22
+
+### 主要重构 - 项目结构优化
+
+- 重构项目目录结构，使其更加模块化和易于维护
+- 添加了中英双语说明文档
+- 将主要功能从单一文件拆分为多个模块，增强代码复用性
+
+### 新增模块
+
+- **src/templates**: 新增模板模块，负责HTML报告生成
+  - 添加`report_template.py`替代原有的HTML报告生成功能
+- **src/cli**: 新增命令行接口模块，处理命令行参数和应用程序运行
+  - 添加`arguments.py`处理命令行参数解析
+  - 添加`logging_setup.py`配置日志系统
+  - 添加`app.py`作为应用程序主要逻辑入口
+
+### 入口文件优化
+
+- 重构入口文件，创建`ollama_intent.py`作为主入口
+- 将`html_report_generator.py`重构为独立工具入口
+
+### 代码优化
+
+- 改进代码组织，减少重复代码
+- 增强类型标注，提高代码可读性
+- 改进错误处理和日志记录
+- 将相关功能组织到相应的模块中，遵循单一职责原则
+
+## 版本升级指南 (0.4.x 到 0.5.0)
+
+### 新的入口点
+
+主入口文件已从`main.py`更改为`ollama_intent.py`。您需要更新调用方式：
+
+**旧版本:**
+
+```bash
+
+python main.py [参数]
+```
+
+**新版本:**
+
+```bash
+python ollama_intent.py [参数]
+```
+
+### 命令行参数
+
+所有命令行参数保持不变。您可以继续使用与0.4.x版本相同的参数。
+
+### 输出目录
+
+新版本保持与旧版本相同的输出目录结构。默认输出目录仍为`outputs/`。如果您使用的是自定义输出目录，可以继续使用`--output-dir`参数指定。
+
+### HTML报告生成器
+
+新版本提供了增强的命令行接口用于生成报告：
+
+```bash
+python html_report_generator.py --summary-file outputs/summary.json --output-file outputs/report.html
+```
+
+### 代码修改说明
+
+如果您对代码进行了自定义修改，请注意以下变化：
+
+1. HTML报告模板现在位于`src/templates/report_template.py`
+2. 命令行参数处理代码现在位于`src/cli/arguments.py`
+3. 主应用程序逻辑现在位于`src/cli/app.py`
+
+### 数据兼容性
+
+新版本完全兼容旧版本的数据格式。您可以继续使用之前生成的输出文件和摘要文件。
+
+### 测试验证
+
+升级后，建议测试基本功能：
+
+1. 测试连接：
+
+   ```bash
+   python ollama_intent.py --test-connection
+   ```
+
+2. 使用默认提示词运行：
+
+   ```bash
+   python ollama_intent.py
+   ```
 
 ## 新增特性
 
@@ -58,6 +162,7 @@
 
 1. 安装Python 3.8+
 2. 安装依赖包：
+
    ```
    pip install -r requirements.txt
    ```
@@ -98,7 +203,7 @@ RESUME_FROM_CHECKPOINT=true
 ### 基本用法
 
 ```bash
-python main.py
+python ollama_intent.py
 ```
 
 这将使用默认配置运行脚本，使用qwen2.5-coder:3b模型和内置的提示词列表。
@@ -106,31 +211,31 @@ python main.py
 ### 高级用法
 
 ```bash
-python main.py --model llama3 --prompts-file prompts.txt --output-dir results --delay 1.0
+python ollama_intent.py --model llama3 --prompts-file prompts.txt --output-dir results --delay 1.0
 ```
 
 ### 测试API连接
 
 ```bash
-python main.py --test-connection
+python ollama_intent.py --test-connection
 ```
 
 ### 从JSON数据集加载提示词
 
 ```bash
-python main.py --dataset-file data/dataset.json
+python ollama_intent.py --dataset-file data/dataset.json
 ```
 
 ### 从inputs目录加载JSON文件
 
 ```bash
-python main.py --inputs-folder inputs
+python ollama_intent.py --inputs-folder inputs
 ```
 
 ### 自定义日志级别和保存日志文件
 
 ```bash
-python main.py --log-level DEBUG --log-file logs/app.log
+python ollama_intent.py --log-level DEBUG --log-file logs/app.log
 ```
 
 ## 开发者工具

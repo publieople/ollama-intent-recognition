@@ -1,196 +1,118 @@
-import os
-import json
-import datetime
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+HTML报告生成器 - 入口文件
 
-def generate_html_report(summary: list, output_dir: str, model_name: str, system_prompt: str):
-    """生成HTML报告文件
+该文件提供了一个命令行工具，用于生成HTML报告。
+"""
+import os
+import sys
+import json
+import argparse
+from typing import List, Dict, Any, Optional
+
+# 将项目根目录添加到模块搜索路径
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# 导入项目模块
+from src.templates.report_template import generate_html_report
+
+
+def parse_arguments() -> argparse.Namespace:
+    """解析命令行参数
+    
+    Returns:
+        解析后的参数
+    """
+    parser = argparse.ArgumentParser(description="HTML报告生成工具")
+    
+    # 输入设置
+    parser.add_argument("--summary-file", type=str, required=True,
+                      help="包含摘要数据的JSON文件路径")
+    parser.add_argument("--system-prompt-file", type=str, required=True,
+                      help="系统提示词文件路径")
+    
+    # 输出设置
+    parser.add_argument("--output-dir", type=str, default="outputs",
+                      help="输出目录")
+    parser.add_argument("--model-name", type=str, default="未指定",
+                      help="模型名称")
+    
+    return parser.parse_args()
+
+
+def load_summary(summary_file: str) -> List[Dict[str, Any]]:
+    """加载摘要数据
     
     Args:
-        summary: 摘要数据
-        output_dir: 输出目录
-        model_name: 模型名称
-        system_prompt: 系统提示词
+        summary_file: 摘要文件路径
+    
+    Returns:
+        摘要数据列表
     """
+    try:
+        with open(summary_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"加载摘要文件失败: {e}")
+        return []
+
+
+def load_system_prompt(prompt_file: str) -> str:
+    """加载系统提示词
+    
+    Args:
+        prompt_file: 提示词文件路径
+    
+    Returns:
+        系统提示词
+    """
+    try:
+        with open(prompt_file, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        print(f"加载系统提示词文件失败: {e}")
+        return ""
+
+
+def main() -> int:
+    """主函数
+    
+    Returns:
+        退出代码
+    """
+    # 解析命令行参数
+    args = parse_arguments()
+    
+    # 加载摘要数据
+    summary = load_summary(args.summary_file)
     if not summary:
-        return
+        print("摘要数据为空，无法生成报告")
+        return 1
     
-    # 创建HTML文件路径
-    html_file = os.path.join(output_dir, "report.html")
+    # 加载系统提示词
+    system_prompt = load_system_prompt(args.system_prompt_file)
+    if not system_prompt:
+        print("警告: 系统提示词为空")
     
-    # 获取当前时间
-    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # 确保输出目录存在
+    os.makedirs(args.output_dir, exist_ok=True)
     
-    # 构建HTML内容
-    html_content = f"""<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话意图识别结果报告</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-            max-width: 1200px;
-            margin: 0 auto;
-        }}
-        h1, h2, h3 {{
-            color: #2c3e50;
-        }}
-        .header {{
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border-left: 5px solid #007bff;
-        }}
-        .system-prompt {{
-            background-color: #f0f7ff;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            white-space: pre-wrap;
-            border: 1px solid #cce5ff;
-        }}
-        .result-item {{
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }}
-        .prompt {{
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            white-space: pre-wrap;
-            border-left: 3px solid #6c757d;
-        }}
-        .response {{
-            background-color: #f0fff0;
-            padding: 10px;
-            border-radius: 5px;
-            white-space: pre-wrap;
-            border-left: 3px solid #28a745;
-        }}
-        .json {{
-            font-family: monospace;
-        }}
-        .meta {{
-            color: #6c757d;
-            font-size: 0.9em;
-            margin-top: 10px;
-        }}
-        .footer {{
-            margin-top: 30px;
-            padding-top: 10px;
-            border-top: 1px solid #eee;
-            color: #6c757d;
-            font-size: 0.9em;
-        }}
-        .toggle-btn {{
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }}
-        .toggle-btn:hover {{
-            background-color: #0069d9;
-        }}
-        .hidden {{
-            display: none;
-        }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>对话意图识别结果报告</h1>
-        <p>生成时间: {now}</p>
-        <p>模型: {model_name}</p>
-        <p>处理提示词数量: {len(summary)}</p>
-    </div>
+    # 生成HTML报告
+    report_file = generate_html_report(
+        summary=summary,
+        output_dir=args.output_dir,
+        model_name=args.model_name,
+        system_prompt=system_prompt
+    )
     
-    <h2>系统提示词</h2>
-    <div class="system-prompt">{system_prompt}</div>
-    
-    <h2>处理结果</h2>
-    <button class="toggle-btn" onclick="toggleAllResponses()">展开/折叠所有响应</button>
-    
-    <div id="results">
-"""
-    
-    # 添加每个提示词和响应
-    for item in summary:
-        prompt_id = item.get("prompt_id", "")
-        prompt = item.get("prompt", "")
-        response = item.get("response", "")
-        output_file = item.get("output_file", "")
-        
-        # 尝试解析响应为JSON
-        try:
-            response_json = json.loads(response)
-            response_formatted = json.dumps(response_json, ensure_ascii=False, indent=2)
-            is_json = True
-        except:
-            response_formatted = response
-            is_json = False
-        
-        html_content += f"""
-    <div class="result-item">
-        <h3>提示词 #{prompt_id}</h3>
-        <div class="prompt">{prompt}</div>
-        <button class="toggle-btn" onclick="toggleResponse('response-{prompt_id}')">显示/隐藏响应</button>
-        <div id="response-{prompt_id}" class="response {'hidden' if prompt_id > 5 else ''}">
-            <div class="{'json' if is_json else ''}">{response_formatted}</div>
-        </div>
-        <div class="meta">输出文件: {os.path.basename(output_file)}</div>
-    </div>
-"""
-    
-    # 添加页脚和JavaScript
-    html_content += """
-    </div>
-    
-    <div class="footer">
-        <p>由Ollama对话意图识别工具生成</p>
-    </div>
-    
-    <script>
-        function toggleResponse(id) {
-            const element = document.getElementById(id);
-            if (element.classList.contains('hidden')) {
-                element.classList.remove('hidden');
-            } else {
-                element.classList.add('hidden');
-            }
-        }
-        
-        function toggleAllResponses() {
-            const responses = document.querySelectorAll('.response');
-            const allHidden = Array.from(responses).every(el => el.classList.contains('hidden'));
-            
-            responses.forEach(el => {
-                if (allHidden) {
-                    el.classList.remove('hidden');
-                } else {
-                    el.classList.add('hidden');
-                }
-            });
-        }
-    </script>
-</body>
-</html>
-"""
-    
-    # 写入HTML文件
-    with open(html_file, "w", encoding="utf-8") as f:
-        f.write(html_content)
-    
-    print(f"已生成HTML报告: {html_file}")
+    if report_file:
+        print(f"已生成HTML报告: {report_file}")
+        return 0
+    else:
+        print("生成HTML报告失败")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
