@@ -215,7 +215,6 @@ class PromptProcessorService:
                 logger.info(f"开始计算评估指标，使用数据集文件: {settings.dataset_file}")
                 logger.info(f"当前摘要包含 {len(self.summary)} 个样本")
                 metrics = evaluate_model_predictions(self.summary, settings.dataset_file)
-                logger.info(f"评估指标计算完成: {metrics}")
             except Exception as e:
                 logger.error(f"计算评估指标时出错: {e}")
                 logger.error(f"错误详情: {str(e)}")

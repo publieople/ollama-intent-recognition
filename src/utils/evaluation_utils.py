@@ -27,12 +27,19 @@ def extract_prediction(response: str) -> Optional[bool]:
         else:
             json_data = response
             
-        # 检查是否包含has_command字段
-        if "has_command" in json_data:
-            return json_data["has_command"]
+        # 处理数组格式
+        if isinstance(json_data, list) and len(json_data) > 0:
+            # 获取数组中的第一个元素
+            first_item = json_data[0]
+            if isinstance(first_item, dict) and "has_command" in first_item:
+                return first_item["has_command"]
         
-        # 对于可能嵌套的JSON结构
+        # 处理对象格式
         if isinstance(json_data, dict):
+            if "has_command" in json_data:
+                return json_data["has_command"]
+            
+            # 对于可能嵌套的JSON结构
             for key, value in json_data.items():
                 if key == "has_command":
                     return value
@@ -59,22 +66,28 @@ def compute_confusion_matrix(
     """
     # 初始化混淆矩阵
     confusion_matrix = {
-        "TP": 0,  # 真正例
-        "FP": 0,  # 假正例
-        "TN": 0,  # 真负例
-        "FN": 0   # 假负例
+        "TP": 0,  # 真正例：预测为指令且实际为指令
+        "FP": 0,  # 假正例：预测为指令但实际不是指令
+        "TN": 0,  # 真负例：预测不是指令且实际不是指令
+        "FN": 0   # 假负例：预测不是指令但实际是指令
     }
     
     # 填充混淆矩阵
     for pred, gt in zip(predictions, ground_truth):
-        if pred is True and gt is True:
+        if pred and gt:
             confusion_matrix["TP"] += 1
-        elif pred is True and gt is False:
+        elif pred and not gt:
             confusion_matrix["FP"] += 1
-        elif pred is False and gt is False:
-            confusion_matrix["TN"] += 1
-        elif pred is False and gt is True:
+        elif not pred and gt:
             confusion_matrix["FN"] += 1
+        else:  # not pred and not gt
+            confusion_matrix["TN"] += 1
+    
+    # 输出调试信息
+    logger.info(f"混淆矩阵: {confusion_matrix}")
+    logger.info(f"总样本数: {len(predictions)}")
+    logger.info(f"预测为指令的样本数: {sum(1 for p in predictions if p)}")
+    logger.info(f"实际为指令的样本数: {sum(1 for g in ground_truth if g)}")
     
     return confusion_matrix
 
@@ -219,8 +232,17 @@ def evaluate_model_predictions(
             # 添加样本分类信息
             item["prediction"] = pred
             item["ground_truth"] = gt
-            item["category"] = "TP" if pred and gt else "FP" if pred else "TN" if not gt else "FN"
+            # 修正分类逻辑
+            if pred and gt:
+                item["category"] = "TP"  # 真正例：预测为指令且实际为指令
+            elif pred and not gt:
+                item["category"] = "FP"  # 假正例：预测为指令但实际不是指令
+            elif not pred and gt:
+                item["category"] = "FN"  # 假负例：预测不是指令但实际是指令
+            else:
+                item["category"] = "TN"  # 真负例：预测不是指令且实际不是指令
             valid_samples.append(item)
+            logger.debug(f"样本 {prompt_id} 分类: pred={pred}, gt={gt}, category={item['category']}")
         else:
             logger.warning(f"无法获取真实标签，使用默认值False: prompt_id={prompt_id}")
             predictions.append(pred)
@@ -228,8 +250,13 @@ def evaluate_model_predictions(
             # 添加样本分类信息
             item["prediction"] = pred
             item["ground_truth"] = False
-            item["category"] = "FP" if pred else "TN"
+            # 修正分类逻辑
+            if pred:
+                item["category"] = "FP"  # 假正例：预测为指令但实际不是指令
+            else:
+                item["category"] = "TN"  # 真负例：预测不是指令且实际不是指令
             valid_samples.append(item)
+            logger.debug(f"样本 {prompt_id} 分类(无真实标签): pred={pred}, gt=False, category={item['category']}")
     
     # 如果没有有效样本，返回零值指标
     if not predictions:
