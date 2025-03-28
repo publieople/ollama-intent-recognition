@@ -58,13 +58,45 @@ def generate_html_report_content(
             margin-bottom: 20px;
             border-left: 5px solid #007bff;
         }}
-        .system-prompt {{
-            background-color: #f0f7ff;
+        .system-prompt-container {{
+            background-color: #fff;
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }}
+        .system-prompt-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: background-color 0.2s;
+        }}
+        .system-prompt-header:hover {{
+            background-color: #e9ecef;
+        }}
+        .system-prompt-content {{
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 5px;
             white-space: pre-wrap;
             border: 1px solid #cce5ff;
+            display: none;
+        }}
+        .system-prompt-content.expanded {{
+            display: block;
+        }}
+        .toggle-icon {{
+            font-size: 1.2em;
+            color: #6c757d;
+            transition: transform 0.2s;
+        }}
+        .toggle-icon.expanded {{
+            transform: rotate(180deg);
         }}
         .metrics-container {{
             display: grid;
@@ -257,6 +289,71 @@ def generate_html_report_content(
             color: #6c757d;
             margin-top: 5px;
         }}
+        /* 样本筛选样式 */
+        .filter-container {{
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }}
+        .filter-buttons {{
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }}
+        .filter-btn {{
+            padding: 8px 16px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }}
+        .filter-btn.active {{
+            color: white;
+        }}
+        .filter-btn.tp {{
+            background-color: #d4edda;
+            color: #155724;
+        }}
+        .filter-btn.tp.active {{
+            background-color: #28a745;
+        }}
+        .filter-btn.fp {{
+            background-color: #f8d7da;
+            color: #721c24;
+        }}
+        .filter-btn.fp.active {{
+            background-color: #dc3545;
+        }}
+        .filter-btn.tn {{
+            background-color: #d4edda;
+            color: #155724;
+        }}
+        .filter-btn.tn.active {{
+            background-color: #28a745;
+        }}
+        .filter-btn.fn {{
+            background-color: #f8d7da;
+            color: #721c24;
+        }}
+        .filter-btn.fn.active {{
+            background-color: #dc3545;
+        }}
+        .filter-btn.all {{
+            background-color: #e9ecef;
+            color: #495057;
+        }}
+        .filter-btn.all.active {{
+            background-color: #6c757d;
+            color: white;
+        }}
+        .sample-count {{
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 10px;
+        }}
     </style>
 </head>
 <body>
@@ -278,9 +375,12 @@ def generate_html_report_content(
         <p>处理提示词数量: {len(summary)}</p>
     </div>
     
-    <div id="system-prompt">
-        <h2>系统提示词</h2>
-        <div class="system-prompt">{system_prompt}</div>
+    <div id="system-prompt" class="system-prompt-container">
+        <div class="system-prompt-header" onclick="toggleSystemPrompt()">
+            <h2 style="margin: 0;">系统提示词</h2>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="system-prompt-content">{system_prompt}</div>
     </div>
     
     {f'''
@@ -347,6 +447,18 @@ def generate_html_report_content(
     
     <div id="results">
         <h2>处理结果</h2>
+        {f'''
+        <div class="filter-container">
+            <div class="filter-buttons">
+                <button class="filter-btn all active" onclick="filterSamples('all')">全部</button>
+                <button class="filter-btn tp" onclick="filterSamples('TP')">真正例 (TP)</button>
+                <button class="filter-btn fp" onclick="filterSamples('FP')">假正例 (FP)</button>
+                <button class="filter-btn tn" onclick="filterSamples('TN')">真负例 (TN)</button>
+                <button class="filter-btn fn" onclick="filterSamples('FN')">假负例 (FN)</button>
+            </div>
+            <div class="sample-count">显示 <span id="sample-count">0</span> 个样本</div>
+        </div>
+        ''' if metrics and metrics.get('samples') else ''}
         <button class="toggle-btn" onclick="toggleAllResponses()">展开/折叠所有响应</button>
         
         <div id="results-content">
@@ -358,6 +470,7 @@ def generate_html_report_content(
         prompt = item.get("prompt", "")
         response = item.get("response", "")
         output_file = item.get("output_file", "")
+        category = item.get("category", "")
         
         # 尝试解析响应为JSON
         try:
@@ -382,7 +495,7 @@ def generate_html_report_content(
             is_dialog = False
         
         html_content += f"""
-        <div class="result-item" id="result-{prompt_id}">
+        <div class="result-item" id="result-{prompt_id}" data-category="{category}">
             <h3>提示词 #{prompt_id}</h3>
             <div class="prompt {'json' if is_dialog else ''}">{prompt_formatted}</div>
             <button class="toggle-btn" onclick="toggleResponse('response-{prompt_id}')">显示/隐藏响应</button>
@@ -425,6 +538,37 @@ def generate_html_report_content(
             });
         }
 
+        function toggleSystemPrompt() {
+            const content = document.querySelector('.system-prompt-content');
+            const icon = document.querySelector('.toggle-icon');
+            content.classList.toggle('expanded');
+            icon.classList.toggle('expanded');
+        }
+
+        function filterSamples(category) {
+            // 更新按钮状态
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.filter-btn.${category.toLowerCase()}`).classList.add('active');
+            
+            // 筛选样本
+            const items = document.querySelectorAll('.result-item');
+            let visibleCount = 0;
+            
+            items.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // 更新样本计数
+            document.getElementById('sample-count').textContent = visibleCount;
+        }
+
         function scrollToSection(sectionId) {
             const element = document.getElementById(sectionId);
             if (element) {
@@ -458,6 +602,10 @@ def generate_html_report_content(
         window.addEventListener('scroll', updateActiveNavItem);
         // 初始化活动项
         updateActiveNavItem();
+        // 初始化样本计数
+        if (document.querySelector('.filter-container')) {
+            filterSamples('all');
+        }
     </script>
 </body>
 </html>

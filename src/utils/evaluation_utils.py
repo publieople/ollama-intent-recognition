@@ -216,6 +216,10 @@ def evaluate_model_predictions(
         if gt is not None:
             predictions.append(pred)
             ground_truth.append(gt)
+            # 添加样本分类信息
+            item["prediction"] = pred
+            item["ground_truth"] = gt
+            item["category"] = "TP" if pred and gt else "FP" if pred else "TN" if not gt else "FN"
             valid_samples.append(item)
         else:
             logger.warning(f"无法获取真实标签: prompt_id={prompt_id}")
@@ -227,7 +231,8 @@ def evaluate_model_predictions(
             "metrics": {},
             "confusion_matrix": {},
             "valid_samples": 0,
-            "total_samples": len(summary)
+            "total_samples": len(summary),
+            "samples": []
         }
     
     # 输出匹配统计信息
@@ -243,5 +248,6 @@ def evaluate_model_predictions(
         "metrics": metrics,
         "confusion_matrix": confusion_matrix,
         "valid_samples": len(valid_samples),
-        "total_samples": len(summary)
+        "total_samples": len(summary),
+        "samples": valid_samples
     } 

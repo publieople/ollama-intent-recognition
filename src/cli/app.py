@@ -14,7 +14,6 @@ from src.utils.prompt_utils import (
     load_prompts_from_inputs_folder, load_system_prompt,
     get_default_prompts
 )
-from src.utils.evaluation_utils import evaluate_model_predictions
 from src.utils.report_utils import open_report_in_browser
 from src.cli.logging_setup import setup_logging
 
