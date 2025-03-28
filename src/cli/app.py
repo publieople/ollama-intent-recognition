@@ -125,6 +125,7 @@ class OllamaIntentApp:
         
         # 处理提示词
         result = self.prompt_processor.process_prompts(
+            model_name=settings.model_name,
             system_prompt=self.system_prompt,
             prompts=self.prompts
         )
