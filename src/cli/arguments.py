@@ -92,6 +92,10 @@ def update_settings_from_args(args: argparse.Namespace) -> None:
         settings.output_dir = args.output_dir
     settings.delay = args.delay
     
+    # 更新数据集文件路径
+    if args.dataset_file:
+        settings.dataset_file = args.dataset_file
+    
     # 更新功能开关
     settings.save_summary = not args.no_summary
     settings.resume_from_checkpoint = not args.no_resume

@@ -78,6 +78,10 @@ def generate_html_report_content(
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             text-align: center;
+            transition: transform 0.2s;
+        }}
+        .metric-card:hover {{
+            transform: translateY(-5px);
         }}
         .metric-value {{
             font-size: 24px;
@@ -101,6 +105,10 @@ def generate_html_report_content(
             border-radius: 5px;
             margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }}
+        .result-item:hover {{
+            transform: translateX(5px);
         }}
         .prompt {{
             background-color: #f8f9fa;
@@ -140,9 +148,10 @@ def generate_html_report_content(
             border-radius: 3px;
             cursor: pointer;
             margin-bottom: 10px;
+            transition: background-color 0.2s;
         }}
         .toggle-btn:hover {{
-            background-color: #0069d9;
+            background-color: #0056b3;
         }}
         .hidden {{
             display: none;
@@ -175,57 +184,172 @@ def generate_html_report_content(
         .matrix-fn {{
             background-color: #f8d7da;
         }}
+        /* 侧边栏样式 */
+        .sidebar {{
+            position: fixed;
+            left: -300px;
+            top: 0;
+            width: 300px;
+            height: 100%;
+            background-color: #fff;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            transition: left 0.3s;
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }}
+        .sidebar:hover {{
+            left: 0;
+        }}
+        .sidebar-header {{
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }}
+        .sidebar-content {{
+            margin-top: 20px;
+        }}
+        .nav-item {{
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }}
+        .nav-item:hover {{
+            background-color: #f8f9fa;
+        }}
+        .nav-item.active {{
+            background-color: #e9ecef;
+            font-weight: bold;
+        }}
+        /* 评估指标详情样式 */
+        .metrics-detail {{
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }}
+        .metrics-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }}
+        .metric-detail-item {{
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }}
+        .metric-detail-label {{
+            font-weight: bold;
+            color: #495057;
+        }}
+        .metric-detail-value {{
+            font-size: 1.2em;
+            color: #007bff;
+            margin-top: 5px;
+        }}
+        .metric-detail-description {{
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 5px;
+        }}
     </style>
 </head>
 <body>
-    <div class="header">
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+        <div class="sidebar-header">目录导航</div>
+        <div class="sidebar-content">
+            <div class="nav-item" onclick="scrollToSection('header')">基本信息</div>
+            <div class="nav-item" onclick="scrollToSection('system-prompt')">系统提示词</div>
+            {f'<div class="nav-item" onclick="scrollToSection(\'metrics\')">评估指标</div>' if metrics else ''}
+            <div class="nav-item" onclick="scrollToSection('results')">处理结果</div>
+        </div>
+    </div>
+
+    <div id="header" class="header">
         <h1>对话意图识别结果报告</h1>
         <p>生成时间: {now}</p>
         <p>模型: {model_name}</p>
         <p>处理提示词数量: {len(summary)}</p>
     </div>
     
-    <h2>系统提示词</h2>
-    <div class="system-prompt">{system_prompt}</div>
-    
-    {f'''
-    <h2>评估指标</h2>
-    <div class="metrics-container">
-        <div class="metric-card">
-            <div class="metric-value">{metrics.get('accuracy', 0):.2%}</div>
-            <div class="metric-label">准确率 (Accuracy)</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">{metrics.get('precision', 0):.2%}</div>
-            <div class="metric-label">精确率 (Precision)</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">{metrics.get('recall', 0):.2%}</div>
-            <div class="metric-label">召回率 (Recall)</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">{metrics.get('f1', 0):.2%}</div>
-            <div class="metric-label">F1分数</div>
-        </div>
+    <div id="system-prompt">
+        <h2>系统提示词</h2>
+        <div class="system-prompt">{system_prompt}</div>
     </div>
     
-    <div class="chart-container">
-        <h3>混淆矩阵</h3>
-        <div class="confusion-matrix">
-            <div class="matrix-cell matrix-header">预测值</div>
-            <div class="matrix-cell matrix-header">真实值</div>
-            <div class="matrix-cell matrix-tp">TP: {metrics.get('confusion_matrix', {}).get('TP', 0)}</div>
-            <div class="matrix-cell matrix-fp">FP: {metrics.get('confusion_matrix', {}).get('FP', 0)}</div>
-            <div class="matrix-cell matrix-tn">TN: {metrics.get('confusion_matrix', {}).get('TN', 0)}</div>
-            <div class="matrix-cell matrix-fn">FN: {metrics.get('confusion_matrix', {}).get('FN', 0)}</div>
+    {f'''
+    <div id="metrics">
+        <h2>评估指标</h2>
+        <div class="metrics-container">
+            <div class="metric-card">
+                <div class="metric-value">{metrics.get('accuracy', 0):.2%}</div>
+                <div class="metric-label">准确率 (Accuracy)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">{metrics.get('precision', 0):.2%}</div>
+                <div class="metric-label">精确率 (Precision)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">{metrics.get('recall', 0):.2%}</div>
+                <div class="metric-label">召回率 (Recall)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">{metrics.get('f1', 0):.2%}</div>
+                <div class="metric-label">F1分数</div>
+            </div>
+        </div>
+        
+        <div class="metrics-detail">
+            <h3>详细评估指标</h3>
+            <div class="metrics-grid">
+                <div class="metric-detail-item">
+                    <div class="metric-detail-label">真正例 (True Positive)</div>
+                    <div class="metric-detail-value">{metrics.get('confusion_matrix', {}).get('TP', 0)}</div>
+                    <div class="metric-detail-description">正确识别为指令的样本数</div>
+                </div>
+                <div class="metric-detail-item">
+                    <div class="metric-detail-label">假正例 (False Positive)</div>
+                    <div class="metric-detail-value">{metrics.get('confusion_matrix', {}).get('FP', 0)}</div>
+                    <div class="metric-detail-description">错误识别为指令的样本数</div>
+                </div>
+                <div class="metric-detail-item">
+                    <div class="metric-detail-label">真负例 (True Negative)</div>
+                    <div class="metric-detail-value">{metrics.get('confusion_matrix', {}).get('TN', 0)}</div>
+                    <div class="metric-detail-description">正确识别为非指令的样本数</div>
+                </div>
+                <div class="metric-detail-item">
+                    <div class="metric-detail-label">假负例 (False Negative)</div>
+                    <div class="metric-detail-value">{metrics.get('confusion_matrix', {}).get('FN', 0)}</div>
+                    <div class="metric-detail-description">错误识别为非指令的样本数</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h3>混淆矩阵</h3>
+            <div class="confusion-matrix">
+                <div class="matrix-cell matrix-header">预测值</div>
+                <div class="matrix-cell matrix-header">真实值</div>
+                <div class="matrix-cell matrix-tp">TP: {metrics.get('confusion_matrix', {}).get('TP', 0)}</div>
+                <div class="matrix-cell matrix-fp">FP: {metrics.get('confusion_matrix', {}).get('FP', 0)}</div>
+                <div class="matrix-cell matrix-tn">TN: {metrics.get('confusion_matrix', {}).get('TN', 0)}</div>
+                <div class="matrix-cell matrix-fn">FN: {metrics.get('confusion_matrix', {}).get('FN', 0)}</div>
+            </div>
         </div>
     </div>
     ''' if metrics else ''}
     
-    <h2>处理结果</h2>
-    <button class="toggle-btn" onclick="toggleAllResponses()">展开/折叠所有响应</button>
-    
     <div id="results">
+        <h2>处理结果</h2>
+        <button class="toggle-btn" onclick="toggleAllResponses()">展开/折叠所有响应</button>
+        
+        <div id="results-content">
 """
     
     # 添加每个提示词和响应
@@ -258,19 +382,20 @@ def generate_html_report_content(
             is_dialog = False
         
         html_content += f"""
-    <div class="result-item">
-        <h3>提示词 #{prompt_id}</h3>
-        <div class="prompt {'json' if is_dialog else ''}">{prompt_formatted}</div>
-        <button class="toggle-btn" onclick="toggleResponse('response-{prompt_id}')">显示/隐藏响应</button>
-        <div id="response-{prompt_id}" class="response {'hidden' if prompt_id > 5 else ''}">
-            <div class="{'json' if is_json else ''}">{response_formatted}</div>
+        <div class="result-item" id="result-{prompt_id}">
+            <h3>提示词 #{prompt_id}</h3>
+            <div class="prompt {'json' if is_dialog else ''}">{prompt_formatted}</div>
+            <button class="toggle-btn" onclick="toggleResponse('response-{prompt_id}')">显示/隐藏响应</button>
+            <div id="response-{prompt_id}" class="response {'hidden' if prompt_id > 5 else ''}">
+                <div class="{'json' if is_json else ''}">{response_formatted}</div>
+            </div>
+            <div class="meta">输出文件: {os.path.basename(output_file)}</div>
         </div>
-        <div class="meta">输出文件: {os.path.basename(output_file)}</div>
-    </div>
 """
     
     # 添加页脚和JavaScript
     html_content += """
+        </div>
     </div>
     
     <div class="footer">
@@ -299,6 +424,40 @@ def generate_html_report_content(
                 }
             });
         }
+
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // 更新侧边栏活动项
+        function updateActiveNavItem() {
+            const sections = ['header', 'system-prompt', 'metrics', 'results'];
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            sections.forEach(section => {
+                const element = document.getElementById(section);
+                if (element) {
+                    const rect = element.getBoundingClientRect();
+                    if (rect.top <= 100 && rect.bottom >= 100) {
+                        navItems.forEach(item => {
+                            if (item.textContent.includes(section)) {
+                                item.classList.add('active');
+                            } else {
+                                item.classList.remove('active');
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        // 监听滚动事件
+        window.addEventListener('scroll', updateActiveNavItem);
+        // 初始化活动项
+        updateActiveNavItem();
     </script>
 </body>
 </html>

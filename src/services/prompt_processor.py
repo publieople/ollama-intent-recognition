@@ -12,6 +12,7 @@ from typing import List, Dict, Any, Optional
 from ..ollama_client import OllamaClient
 from ..config.settings import settings
 from ..utils.file_utils import get_existing_responses, compute_prompt_hash, save_json_file, extract_json_from_text
+from ..utils.evaluation_utils import evaluate_model_predictions
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -191,6 +192,15 @@ class PromptProcessorService:
                 logger.error(f"处理提示词时出错: {prompt_id}, 错误: {e}")
                 continue
         
+        # 计算评估指标
+        metrics = {}
+        if settings.dataset_file:
+            try:
+                metrics = evaluate_model_predictions(self.summary, settings.dataset_file)
+                logger.info("已计算评估指标")
+            except Exception as e:
+                logger.error(f"计算评估指标时出错: {e}")
+        
         # 最终保存摘要
         if settings.save_summary and self.summary:
             self._save_summary(summary_file)
@@ -201,7 +211,8 @@ class PromptProcessorService:
             "total_count": len(prompts),
             "summary_file": summary_file if settings.save_summary else None,
             "output_dir": settings.output_dir,
-            "summary": self.summary
+            "summary": self.summary,
+            "metrics": metrics
         }
     
     def _save_summary(self, summary_file: str) -> None:
