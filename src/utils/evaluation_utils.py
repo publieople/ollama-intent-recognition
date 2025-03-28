@@ -37,11 +37,11 @@ def extract_prediction(response: str) -> Optional[bool]:
                 if key == "has_command":
                     return value
         
-        logger.warning(f"无法从响应中提取预测结果: {response}")
-        return None
+        logger.warning(f"无法从响应中提取预测结果，使用默认值False: {response}")
+        return False
     except Exception as e:
-        logger.error(f"解析模型响应时出错: {e}")
-        return None
+        logger.error(f"解析模型响应时出错，使用默认值False: {e}")
+        return False
 
 
 def compute_confusion_matrix(
@@ -222,14 +222,31 @@ def evaluate_model_predictions(
             item["category"] = "TP" if pred and gt else "FP" if pred else "TN" if not gt else "FN"
             valid_samples.append(item)
         else:
-            logger.warning(f"无法获取真实标签: prompt_id={prompt_id}")
+            logger.warning(f"无法获取真实标签，使用默认值False: prompt_id={prompt_id}")
+            predictions.append(pred)
+            ground_truth.append(False)  # 使用默认值False
+            # 添加样本分类信息
+            item["prediction"] = pred
+            item["ground_truth"] = False
+            item["category"] = "FP" if pred else "TN"
+            valid_samples.append(item)
     
-    # 如果没有有效样本，返回空结果
+    # 如果没有有效样本，返回零值指标
     if not predictions:
         logger.warning("没有找到有效的评估样本")
         return {
-            "metrics": {},
-            "confusion_matrix": {},
+            "metrics": {
+                "accuracy": 0.0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1": 0.0
+            },
+            "confusion_matrix": {
+                "TP": 0,
+                "FP": 0,
+                "TN": 0,
+                "FN": 0
+            },
             "valid_samples": 0,
             "total_samples": len(summary),
             "samples": []

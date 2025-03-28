@@ -388,19 +388,19 @@ def generate_html_report_content(
         <h2>评估指标</h2>
         <div class="metrics-container">
             <div class="metric-card">
-                <div class="metric-value">{metrics.get('accuracy', 0):.2%}</div>
+                <div class="metric-value">{metrics.get('metrics', {}).get('accuracy', 0):.2%}</div>
                 <div class="metric-label">准确率 (Accuracy)</div>
             </div>
             <div class="metric-card">
-                <div class="metric-value">{metrics.get('precision', 0):.2%}</div>
+                <div class="metric-value">{metrics.get('metrics', {}).get('precision', 0):.2%}</div>
                 <div class="metric-label">精确率 (Precision)</div>
             </div>
             <div class="metric-card">
-                <div class="metric-value">{metrics.get('recall', 0):.2%}</div>
+                <div class="metric-value">{metrics.get('metrics', {}).get('recall', 0):.2%}</div>
                 <div class="metric-label">召回率 (Recall)</div>
             </div>
             <div class="metric-card">
-                <div class="metric-value">{metrics.get('f1', 0):.2%}</div>
+                <div class="metric-value">{metrics.get('metrics', {}).get('f1', 0):.2%}</div>
                 <div class="metric-label">F1分数</div>
             </div>
         </div>

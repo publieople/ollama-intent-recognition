@@ -193,13 +193,32 @@ class PromptProcessorService:
                 continue
         
         # 计算评估指标
-        metrics = {}
+        metrics = {
+            "metrics": {
+                "accuracy": 0.0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1": 0.0
+            },
+            "confusion_matrix": {
+                "TP": 0,
+                "FP": 0,
+                "TN": 0,
+                "FN": 0
+            },
+            "valid_samples": 0,
+            "total_samples": len(self.summary),
+            "samples": []
+        }
         if settings.dataset_file:
             try:
+                logger.info(f"开始计算评估指标，使用数据集文件: {settings.dataset_file}")
+                logger.info(f"当前摘要包含 {len(self.summary)} 个样本")
                 metrics = evaluate_model_predictions(self.summary, settings.dataset_file)
-                logger.info("已计算评估指标")
+                logger.info(f"评估指标计算完成: {metrics}")
             except Exception as e:
                 logger.error(f"计算评估指标时出错: {e}")
+                logger.error(f"错误详情: {str(e)}")
         
         # 最终保存摘要
         if settings.save_summary and self.summary:

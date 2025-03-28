@@ -245,7 +245,7 @@
                 "content": "好呀，我正好需要买点零食。"
             }
         ],
-        "has_command": false
+        "has_command": true
     },
     {
         "dialog": [
@@ -569,7 +569,7 @@
                 "content": "那很棒啊，我支持你，需要什么材料我帮你买。"
             }
         ],
-        "has_command": false
+        "has_command": true
     },
     {
         "dialog": [

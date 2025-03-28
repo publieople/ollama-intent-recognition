@@ -92,7 +92,7 @@ class Settings:
         self.output_dir: str = _get_env('OUTPUT_DIR', "outputs")
         self.input_dir: str = _get_env('INPUT_DIR', "inputs")
         self.delay: float = _get_env('DELAY', 0.1, float)
-        self.dataset_file: Optional[str] = _get_env('DATASET_FILE', None)
+        self.dataset_file: Optional[str] = _get_env('DATASET_FILE', "data/dataset.json")
         
         # 功能开关
         self.save_summary: bool = _get_env('SAVE_SUMMARY', True, _parse_bool)
