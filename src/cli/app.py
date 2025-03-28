@@ -154,7 +154,6 @@ class OllamaIntentApp:
         self.logger.info("=" * 50)
         self.logger.info("报告生成信息:")
         self.logger.info(f"  - 摘要包含 {len(summary)} 个样本")
-        self.logger.info(f"  - 评估指标: {metrics}")
         self.logger.info(f"  - 输出目录: {settings.output_dir}")
         self.logger.info(f"  - 是否生成报告: {settings.generate_report}")
         self.logger.info(f"  - 是否自动打开报告: {settings.open_report}")

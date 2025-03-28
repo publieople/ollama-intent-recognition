@@ -1,202 +1,202 @@
 [
     {
-      "dialog": [
-        {
-          "speaker": "父亲",
-          "content": "今天天气这么好，咱们把窗户打开通通风吧。"
-        },
-        {
-          "speaker": "母亲",
-          "content": "好主意，顺便把空气净化器关掉。"
-        }
-      ],
-        "has_command": true
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "女儿",
-          "content": "妈妈，我今天考试得了95分！"
-        },
-        {
-          "speaker": "母亲",
-          "content": "太棒了，宝贝！晚上给你做你最爱吃的红烧鸡翅。"
-        }
-      ],
-        "has_command": false
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "父亲",
-          "content": "明天早上有个重要的会议，我得早点出门。"
-        },
-        {
-          "speaker": "母亲",
-          "content": "几点呀？"
-        },
-        {
-            "speaker":"父亲",
-            "content":"早上七点吧"
-        }
-      ],
+        "dialog": [
+            {
+                "speaker": "父亲",
+                "content": "今天天气这么好，咱们把窗户打开通通风吧。"
+            },
+            {
+                "speaker": "母亲",
+                "content": "好主意，顺便把空气净化器关掉。"
+            }
+        ],
         "has_command": true
     },
     {
         "dialog": [
-          {
-            "speaker": "母亲",
-            "content": "最近感觉眼睛有点干涩，是不是用眼过度了？"
-          },
-          {
-            "speaker": "父亲",
-            "content": "可能是，多休息休息，少看手机。"
-          }
-    ],
-        "has_command": false
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "儿子",
-          "content": "客厅的电视声音太小了，听不清。"
-        },
-        {
-          "speaker": "父亲",
-          "content": "那可以把音量调大一点。"
-        }
-      ],
-      "has_command": true
-    },
-    {
-        "dialog": [
-          {
-            "speaker": "父亲",
-            "content": "最近新闻里说，那个新电影很不错。"
-          },
-          {
-            "speaker": "儿子",
-            "content": "是吗？我周末去看看。"
-          }
+            {
+                "speaker": "女儿",
+                "content": "妈妈，我今天考试得了95分！"
+            },
+            {
+                "speaker": "母亲",
+                "content": "太棒了，宝贝！晚上给你做你最爱吃的红烧鸡翅。"
+            }
         ],
         "has_command": false
     },
     {
-      "dialog": [
-        {
-          "speaker": "女儿",
-          "content": "卧室有点冷，能开一下暖气吗？"
-        },
-        {
-          "speaker": "母亲",
-          "content": "好的，我这就去开。"
-        }
-      ],
+        "dialog": [
+            {
+                "speaker": "父亲",
+                "content": "明天早上有个重要的会议，我得早点出门。"
+            },
+            {
+                "speaker": "母亲",
+                "content": "几点呀？"
+            },
+            {
+                "speaker": "父亲",
+                "content": "早上七点吧"
+            }
+        ],
         "has_command": true
     },
     {
         "dialog": [
-          {
-            "speaker": "父亲",
-            "content": "你觉得湖人今年能拿总冠军吗?"
-          },
-          {
-            "speaker": "儿子",
-            "content": "我觉得包可以的！"
-          }
+            {
+                "speaker": "母亲",
+                "content": "最近感觉眼睛有点干涩，是不是用眼过度了？"
+            },
+            {
+                "speaker": "父亲",
+                "content": "可能是，多休息休息，少看手机。"
+            }
         ],
         "has_command": false
-      },
+    },
     {
-      "dialog": [
-        {
-          "speaker": "母亲",
-          "content": "下周我们要去奶奶家，记得提前买点水果。"
-        }
-      ],
+        "dialog": [
+            {
+                "speaker": "儿子",
+                "content": "客厅的电视声音太小了，听不清。"
+            },
+            {
+                "speaker": "父亲",
+                "content": "那可以把音量调大一点。"
+            }
+        ],
         "has_command": true
     },
     {
-      "dialog": [
-        {
-          "speaker": "母亲",
-          "content": "最近感觉腰酸背痛的，是不是该去做个按摩了？"
-        },
-        {
-          "speaker": "父亲",
-          "content": "可以呀，我帮你预约一下。"
-        }
-      ],
+        "dialog": [
+            {
+                "speaker": "父亲",
+                "content": "最近新闻里说，那个新电影很不错。"
+            },
+            {
+                "speaker": "儿子",
+                "content": "是吗？我周末去看看。"
+            }
+        ],
         "has_command": false
     },
     {
-      "dialog": [
-        {
-          "speaker": "女儿",
-          "content": "今天天气这么好，咱们把阳台的花浇一下吧。"
-        },
-        {
-          "speaker": "母亲",
-          "content": "可是前两天应该浇过了吧"
-        }
-      ],
+        "dialog": [
+            {
+                "speaker": "女儿",
+                "content": "卧室有点冷，能开一下暖气吗？"
+            },
+            {
+                "speaker": "母亲",
+                "content": "好的，我这就去开。"
+            }
+        ],
         "has_command": true
     },
     {
-      "dialog": [
-        {
-          "speaker": "父亲",
-          "content": "最近小区里新开了一个健身房，我打算去办个卡。"
-        },
-        {
-          "speaker": "母亲",
-          "content": "挺好的，锻炼身体很重要。"
-        }
-      ],
+        "dialog": [
+            {
+                "speaker": "父亲",
+                "content": "你觉得湖人今年能拿总冠军吗?"
+            },
+            {
+                "speaker": "儿子",
+                "content": "我觉得包可以的！"
+            }
+        ],
         "has_command": false
     },
     {
-      "dialog": [
-        {
-          "speaker": "儿子",
-          "content": "卧室的空调风太大了，吹的人脑袋疼"
-        }
-      ],
+        "dialog": [
+            {
+                "speaker": "母亲",
+                "content": "下周我们要去奶奶家，记得提前买点水果。"
+            }
+        ],
         "has_command": true
     },
     {
-      "dialog": [
-        {
-          "speaker": "女儿",
-          "content": "我最近总是感觉肚子疼，是不是吃坏东西了？"
-        },
-        {
-          "speaker": "父亲",
-          "content": "要不咱们去医院看看吧。"
-        }
-    ],
+        "dialog": [
+            {
+                "speaker": "母亲",
+                "content": "最近感觉腰酸背痛的，是不是该去做个按摩了？"
+            },
+            {
+                "speaker": "父亲",
+                "content": "可以呀，我帮你预约一下。"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "女儿",
+                "content": "今天天气这么好，咱们把阳台的花浇一下吧。"
+            },
+            {
+                "speaker": "母亲",
+                "content": "可是前两天应该浇过了吧"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "父亲",
+                "content": "最近小区里新开了一个健身房，我打算去办个卡。"
+            },
+            {
+                "speaker": "母亲",
+                "content": "挺好的，锻炼身体很重要。"
+            }
+        ],
         "has_command": false
     },
     {
-      "dialog": [
-        {
-          "speaker": "母亲",
-          "content": "今天天气不太好，记得把阳台的窗户关上。"
-        }
-      ],
+        "dialog": [
+            {
+                "speaker": "儿子",
+                "content": "卧室的空调风太大了，吹的人脑袋疼"
+            }
+        ],
         "has_command": true
     },
     {
-      "dialog": [
-        {
-          "speaker": "父亲",
-          "content": "最近新闻里说，那个新餐厅的菜很不错。"
-        },
-        {
-          "speaker": "母亲",
-          "content": "是吗？有空咱们去尝尝。"
-        }
-      ],
+        "dialog": [
+            {
+                "speaker": "女儿",
+                "content": "我最近总是感觉肚子疼，是不是吃坏东西了？"
+            },
+            {
+                "speaker": "父亲",
+                "content": "要不咱们去医院看看吧。"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "母亲",
+                "content": "今天天气不太好，记得把阳台的窗户关上。"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "父亲",
+                "content": "最近新闻里说，那个新餐厅的菜很不错。"
+            },
+            {
+                "speaker": "母亲",
+                "content": "是吗？有空咱们去尝尝。"
+            }
+        ],
         "has_command": false
     },
     {
@@ -223,7 +223,7 @@
                 "content": "好，我马上调低音量。"
             }
         ],
-        "has_command": false
+        "has_command": true
     },
     {
         "dialog": [
@@ -271,7 +271,7 @@
                 "content": "你穿这么厚能不热吗？。"
             }
         ],
-        "has_command": false
+        "has_command": true
     },
     {
         "dialog": [
@@ -436,8 +436,8 @@
                 "content": "去吧，去五天，后天早上八点出发，收拾好你的东西"
             },
             {
-                "speaker":"女儿",
-                "content":"好哒"
+                "speaker": "女儿",
+                "content": "好哒"
             }
         ],
         "has_command": true
@@ -456,7 +456,6 @@
         "has_command": false
     },
     {
-
         "dialog": [
             {
                 "speaker": "母亲",
@@ -767,7 +766,7 @@
                 "content": "今天好累啊，准备睡觉了。"
             }
         ],
-        "has_command": true
+        "has_command": false
     },
     {
         "dialog": [
@@ -914,7 +913,7 @@
                 "content": "那我们周末先查查攻略，看看哪里的海边适合度假。"
             }
         ],
-        "has_command": false
+        "has_command": true
     },
     {
         "dialog": [
@@ -944,7 +943,7 @@
                 "content": "我可以帮忙泡杯热牛奶，有助于睡眠。"
             }
         ],
-        "has_command": false
+        "has_command": true
     },
     {
         "dialog": [
@@ -1042,7 +1041,7 @@
                 "content": "我可以骑自行车，咱们一起去锻炼身体。"
             }
         ],
-        "has_command": false
+        "has_command": true
     },
     {
         "dialog": [

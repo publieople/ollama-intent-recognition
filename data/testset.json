@@ -1,254 +1,254 @@
 [
     {
-      "dialog": [
-        {
-          "speaker": "父亲",
-          "content": "客厅的灯有点暗"
-        },
-        {
-          "speaker": "母亲",
-          "content": "是呀，在这里看书多伤研究呀"
-        }
-      ],
-      "has_command": true
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "女儿",
-          "content": "今天学校组织了春游，好开心！"
-        },
-        {
-          "speaker": "父亲",
-          "content": "那就好好玩玩，注意安全哦。"
-        }
-      ],
-      "has_command": false
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "母亲",
-          "content": "今天天气有点热，把开冷一点。"
-        },
-        {
-          "speaker": "父亲",
-          "content": "是呀 就穿了一件短袖，还这么热"
-        }
-      ],
-      "has_command": true
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "儿子",
-          "content": "我最近总是感觉头晕，是不是没休息好？"
-        },
-        {
-          "speaker": "母亲",
-          "content": "可能是，早点休息吧。"
-        }
-      ],
-      "has_command": false
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "父亲",
-          "content": "今天天气不太好，可能会下雨吧。"
-        },
-        {
-          "speaker": "女儿",
-          "content": "不知道，好像要来台风了。"
-        }
-      ],
-      "has_command": true
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "母亲",
-          "content": "最近新闻里说，那个新电影很不错。"
-        },
-        {
-          "speaker": "儿子",
-          "content": "是吗？我周末去看看。"
-        }
-      ],
-      "has_command": false
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "女儿",
-          "content": "卧室的窗帘有点透光，能拉上吗？"
-        }
-      ],
-      "has_command": true
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "儿子",
-          "content": "我最近总是感觉肚子疼，是不是吃坏东西了？"
-        },
-        {
-          "speaker": "父亲",
-          "content": "可能是，少吃点油腻的。"
-        }
-      ],
-      "has_command":false
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "母亲",
-          "content": "今天阴天，湿冷湿冷地"
-        },
-        {
-          "speaker": "父亲",
-          "content": "是的，我的风湿都烦了"
-        }
-      ],
-      "has_command": true
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "儿子",
-          "content": "今天学校发了新书，好开心！"
-        },
-        {
-          "speaker": "母亲",
-          "content": "那就好好学习哦。"
-        }
-      ],
-      "has_command": false
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "父亲",
-          "content": "今天天气不错，把阳台的门打开，透透气吧。"
-        }
-      ],
-      "has_command": true
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "母亲",
-          "content": "我最近总是感觉膝盖疼，是不是缺钙了？"
-        },
-        {
-          "speaker": "儿子",
-          "content": "可能是，多吃点钙片吧。"
-        }
-      ],
-      "has_command": false
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "女儿",
-          "content": "客厅的音响声音太小了吧！"
-        },
-        {
-          "speaker": "母亲",
-          "content": "也可能是外面装修太吵了"
-        }
-      ],
-      "has_command": true
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "父亲",
-          "content": "最近天气变化好快，一会儿热一会儿冷。"
-        },
-        {
-          "speaker": "母亲",
-          "content": "是啊，得多注意增减衣物。"
-        }
-      ],
-      "has_command": false
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "母亲",
-          "content": "五一了，我们要出去玩了，这五天家里地猫猫怎么办？"
-        },
-        {
-          "speaker": "儿子",
-          "content": "让小爱定时投喂就好了"
-        }
-      ],
-      "has_command": true
-    },
-    {
-      "dialog": [
-        {
-          "speaker": "儿子",
-          "content": "我最近总是感觉头晕，是不是没休息好？"
-        },
-        {
-          "speaker": "父亲",
-          "content": "可能是，早点休息吧。"
-        }
-      ],
-      "has_command": false
-    },
-    {
-      "dialog": [
-          {
-              "speaker": "女儿",
-              "content": "卧室的灯好像有点闪，是不是坏了？"
-          },
-          {
-              "speaker": "父亲",
-              "content": "不知道呀，可以保修一下。"
-          }
-      ],
-      "has_command": true
-    },
-    {
-      "dialog": [
-          {
-              "speaker": "母亲",
-              "content": "最近小区里新开了一个烘焙店，周末咱们去尝尝吧。"
-          },
-          {
-              "speaker": "儿子",
-              "content": "好呀，我想吃甜甜圈。"
-          }
-      ],
-      "has_command": false
-    },
-    {
-      "dialog": [
-          {
-              "speaker": "父亲",
-              "content": "今天天气不太好，可能要下雨，把阳台的窗户关上吧。"
-          },
-          {
-              "speaker": "女儿",
-              "content": "别的也都关上地好，就留个卫生间地透透气吧。"
-          }
-      ],
+        "dialog": [
+            {
+                "speaker": "父亲",
+                "content": "客厅的灯有点暗"
+            },
+            {
+                "speaker": "母亲",
+                "content": "是呀，在这里看书多伤研究呀"
+            }
+        ],
         "has_command": true
     },
     {
-      "dialog": [
-          {
-              "speaker": "父亲",
-              "content": "今天天气不错，不用开空调了，开窗呼吸一下新鲜空气。"
-          },
-          {
-              "speaker": "女儿",
-              "content": "是哦，我也觉得"
-          }
-      ],
-      "has_command": true
+        "dialog": [
+            {
+                "speaker": "女儿",
+                "content": "今天学校组织了春游，好开心！"
+            },
+            {
+                "speaker": "父亲",
+                "content": "那就好好玩玩，注意安全哦。"
+            }
+        ],
+        "has_command": false
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "母亲",
+                "content": "今天天气有点热，把开冷一点。"
+            },
+            {
+                "speaker": "父亲",
+                "content": "是呀 就穿了一件短袖，还这么热"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "儿子",
+                "content": "我最近总是感觉头晕，是不是没休息好？"
+            },
+            {
+                "speaker": "母亲",
+                "content": "可能是，早点休息吧。"
+            }
+        ],
+        "has_command": false
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "父亲",
+                "content": "今天天气不太好，可能会下雨吧。"
+            },
+            {
+                "speaker": "女儿",
+                "content": "不知道，好像要来台风了。"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "母亲",
+                "content": "最近新闻里说，那个新电影很不错。"
+            },
+            {
+                "speaker": "儿子",
+                "content": "是吗？我周末去看看。"
+            }
+        ],
+        "has_command": false
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "女儿",
+                "content": "卧室的窗帘有点透光，能拉上吗？"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "儿子",
+                "content": "我最近总是感觉肚子疼，是不是吃坏东西了？"
+            },
+            {
+                "speaker": "父亲",
+                "content": "可能是，少吃点油腻的。"
+            }
+        ],
+        "has_command": false
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "母亲",
+                "content": "今天阴天，湿冷湿冷地"
+            },
+            {
+                "speaker": "父亲",
+                "content": "是的，我的风湿都烦了"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "儿子",
+                "content": "今天学校发了新书，好开心！"
+            },
+            {
+                "speaker": "母亲",
+                "content": "那就好好学习哦。"
+            }
+        ],
+        "has_command": false
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "父亲",
+                "content": "今天天气不错，把阳台的门打开，透透气吧。"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "母亲",
+                "content": "我最近总是感觉膝盖疼，是不是缺钙了？"
+            },
+            {
+                "speaker": "儿子",
+                "content": "可能是，多吃点钙片吧。"
+            }
+        ],
+        "has_command": false
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "女儿",
+                "content": "客厅的音响声音太小了吧！"
+            },
+            {
+                "speaker": "母亲",
+                "content": "也可能是外面装修太吵了"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "父亲",
+                "content": "最近天气变化好快，一会儿热一会儿冷。"
+            },
+            {
+                "speaker": "母亲",
+                "content": "是啊，得多注意增减衣物。"
+            }
+        ],
+        "has_command": false
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "母亲",
+                "content": "五一了，我们要出去玩了，这五天家里地猫猫怎么办？"
+            },
+            {
+                "speaker": "儿子",
+                "content": "让小爱定时投喂就好了"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "儿子",
+                "content": "我最近总是感觉头晕，是不是没休息好？"
+            },
+            {
+                "speaker": "父亲",
+                "content": "可能是，早点休息吧。"
+            }
+        ],
+        "has_command": false
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "女儿",
+                "content": "卧室的灯好像有点闪，是不是坏了？"
+            },
+            {
+                "speaker": "父亲",
+                "content": "不知道呀，可以保修一下。"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "母亲",
+                "content": "最近小区里新开了一个烘焙店，周末咱们去尝尝吧。"
+            },
+            {
+                "speaker": "儿子",
+                "content": "好呀，我想吃甜甜圈。"
+            }
+        ],
+        "has_command": false
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "父亲",
+                "content": "今天天气不太好，可能要下雨，把阳台的窗户关上吧。"
+            },
+            {
+                "speaker": "女儿",
+                "content": "别的也都关上地好，就留个卫生间地透透气吧。"
+            }
+        ],
+        "has_command": true
+    },
+    {
+        "dialog": [
+            {
+                "speaker": "父亲",
+                "content": "今天天气不错，不用开空调了，开窗呼吸一下新鲜空气。"
+            },
+            {
+                "speaker": "女儿",
+                "content": "是哦，我也觉得"
+            }
+        ],
+        "has_command": true
     }
 ]
