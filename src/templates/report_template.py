@@ -4,13 +4,14 @@
 import os
 import json
 import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 
 def generate_html_report_content(
     summary: list, 
     model_name: str, 
-    system_prompt: str
+    system_prompt: str,
+    metrics: Optional[Dict[str, Any]] = None
 ) -> str:
     """生成HTML报告内容
     
@@ -18,6 +19,7 @@ def generate_html_report_content(
         summary: 摘要数据
         model_name: 模型名称
         system_prompt: 系统提示词
+        metrics: 评估指标（可选）
         
     Returns:
         HTML内容字符串
@@ -35,6 +37,7 @@ def generate_html_report_content(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>对话意图识别结果报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {{
             font-family: Arial, sans-serif;
@@ -62,6 +65,35 @@ def generate_html_report_content(
             margin-bottom: 20px;
             white-space: pre-wrap;
             border: 1px solid #cce5ff;
+        }}
+        .metrics-container {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }}
+        .metric-card {{
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }}
+        .metric-value {{
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }}
+        .metric-label {{
+            color: #6c757d;
+            margin-top: 5px;
+        }}
+        .chart-container {{
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
         }}
         .result-item {{
             background-color: #fff;
@@ -115,6 +147,34 @@ def generate_html_report_content(
         .hidden {{
             display: none;
         }}
+        .confusion-matrix {{
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }}
+        .matrix-cell {{
+            padding: 10px;
+            text-align: center;
+            border-radius: 3px;
+            font-weight: bold;
+        }}
+        .matrix-header {{
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }}
+        .matrix-tp {{
+            background-color: #d4edda;
+        }}
+        .matrix-fp {{
+            background-color: #f8d7da;
+        }}
+        .matrix-tn {{
+            background-color: #d4edda;
+        }}
+        .matrix-fn {{
+            background-color: #f8d7da;
+        }}
     </style>
 </head>
 <body>
@@ -127,6 +187,40 @@ def generate_html_report_content(
     
     <h2>系统提示词</h2>
     <div class="system-prompt">{system_prompt}</div>
+    
+    {f'''
+    <h2>评估指标</h2>
+    <div class="metrics-container">
+        <div class="metric-card">
+            <div class="metric-value">{metrics.get('accuracy', 0):.2%}</div>
+            <div class="metric-label">准确率 (Accuracy)</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{metrics.get('precision', 0):.2%}</div>
+            <div class="metric-label">精确率 (Precision)</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{metrics.get('recall', 0):.2%}</div>
+            <div class="metric-label">召回率 (Recall)</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{metrics.get('f1', 0):.2%}</div>
+            <div class="metric-label">F1分数</div>
+        </div>
+    </div>
+    
+    <div class="chart-container">
+        <h3>混淆矩阵</h3>
+        <div class="confusion-matrix">
+            <div class="matrix-cell matrix-header">预测值</div>
+            <div class="matrix-cell matrix-header">真实值</div>
+            <div class="matrix-cell matrix-tp">TP: {metrics.get('confusion_matrix', {}).get('TP', 0)}</div>
+            <div class="matrix-cell matrix-fp">FP: {metrics.get('confusion_matrix', {}).get('FP', 0)}</div>
+            <div class="matrix-cell matrix-tn">TN: {metrics.get('confusion_matrix', {}).get('TN', 0)}</div>
+            <div class="matrix-cell matrix-fn">FN: {metrics.get('confusion_matrix', {}).get('FN', 0)}</div>
+        </div>
+    </div>
+    ''' if metrics else ''}
     
     <h2>处理结果</h2>
     <button class="toggle-btn" onclick="toggleAllResponses()">展开/折叠所有响应</button>
@@ -150,10 +244,23 @@ def generate_html_report_content(
             response_formatted = response
             is_json = False
         
+        # 尝试解析提示词为JSON（如果是对话格式）
+        try:
+            prompt_json = json.loads(prompt)
+            if isinstance(prompt_json, dict) and "dialog" in prompt_json:
+                prompt_formatted = json.dumps(prompt_json, ensure_ascii=False, indent=2)
+                is_dialog = True
+            else:
+                prompt_formatted = prompt
+                is_dialog = False
+        except:
+            prompt_formatted = prompt
+            is_dialog = False
+        
         html_content += f"""
     <div class="result-item">
         <h3>提示词 #{prompt_id}</h3>
-        <div class="prompt">{prompt}</div>
+        <div class="prompt {'json' if is_dialog else ''}">{prompt_formatted}</div>
         <button class="toggle-btn" onclick="toggleResponse('response-{prompt_id}')">显示/隐藏响应</button>
         <div id="response-{prompt_id}" class="response {'hidden' if prompt_id > 5 else ''}">
             <div class="{'json' if is_json else ''}">{response_formatted}</div>
@@ -204,7 +311,8 @@ def generate_html_report(
     summary: list, 
     output_dir: str, 
     model_name: str, 
-    system_prompt: str
+    system_prompt: str,
+    metrics: Optional[Dict[str, Any]] = None
 ) -> Optional[str]:
     """生成HTML报告文件
     
@@ -213,6 +321,7 @@ def generate_html_report(
         output_dir: 输出目录
         model_name: 模型名称
         system_prompt: 系统提示词
+        metrics: 评估指标（可选）
         
     Returns:
         生成的HTML文件路径，如果失败则返回None
@@ -224,7 +333,7 @@ def generate_html_report(
     html_file = os.path.join(output_dir, "report.html")
     
     # 生成HTML内容
-    html_content = generate_html_report_content(summary, model_name, system_prompt)
+    html_content = generate_html_report_content(summary, model_name, system_prompt, metrics)
     
     # 写入HTML文件
     try:

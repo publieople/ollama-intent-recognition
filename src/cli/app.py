@@ -33,6 +33,7 @@ class OllamaIntentApp:
         self.prompt_processor: Optional[PromptProcessorService] = None
         self.system_prompt: str = ""
         self.prompts: List[str] = []
+        self.dataset_file: Optional[str] = None
     
     def setup(self) -> None:
         """设置应用程序"""
@@ -91,6 +92,7 @@ class OllamaIntentApp:
             self.prompts = load_prompts_from_json(self.args.dataset_file)
             if self.prompts:
                 self.logger.info(f"已从数据集文件加载 {len(self.prompts)} 个提示词: {self.args.dataset_file}")
+                self.dataset_file = self.args.dataset_file
             else:
                 self.logger.warning("从数据集文件加载提示词失败，使用默认提示词列表")
                 self.prompts = get_default_prompts()
@@ -130,6 +132,10 @@ class OllamaIntentApp:
             prompts=self.prompts
         )
         
+        # 添加日志输出
+        self.logger.info(f"处理完成，结果包含 {len(result.get('summary', []))} 个样本")
+        self.logger.info(f"是否生成报告: {settings.generate_report}")
+        
         return result
     
     def generate_report(self, result: Dict[str, Any]) -> None:
@@ -145,6 +151,16 @@ class OllamaIntentApp:
         summary = result.get("summary", [])
         metrics = result.get("metrics", {})
         
+        # 添加详细的日志输出
+        self.logger.info("=" * 50)
+        self.logger.info("报告生成信息:")
+        self.logger.info(f"  - 摘要包含 {len(summary)} 个样本")
+        self.logger.info(f"  - 评估指标: {metrics}")
+        self.logger.info(f"  - 输出目录: {settings.output_dir}")
+        self.logger.info(f"  - 是否生成报告: {settings.generate_report}")
+        self.logger.info(f"  - 是否自动打开报告: {settings.open_report}")
+        self.logger.info("=" * 50)
+        
         # 创建报告服务
         report_service = ReportService()
         
@@ -152,11 +168,17 @@ class OllamaIntentApp:
         report_file = report_service.generate_html_report(
             summary=summary,
             system_prompt=self.system_prompt,
-            metrics=metrics
+            metrics=metrics,
+            dataset_file=self.dataset_file
         )
         
-        if report_file and settings.open_report:
-            open_report_in_browser(report_file)
+        if report_file:
+            self.logger.info(f"报告已生成: {report_file}")
+            if settings.open_report:
+                self.logger.info("正在浏览器中打开报告...")
+                open_report_in_browser(report_file)
+        else:
+            self.logger.error("报告生成失败")
     
     def run(self) -> int:
         """运行应用程序

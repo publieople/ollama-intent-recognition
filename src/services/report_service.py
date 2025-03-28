@@ -30,7 +30,8 @@ class ReportService:
         self, 
         summary: List[Dict[str, Any]], 
         system_prompt: str,
-        metrics: Optional[Dict[str, Any]] = None
+        metrics: Optional[Dict[str, Any]] = None,
+        dataset_file: Optional[str] = None
     ) -> Optional[str]:
         """生成HTML报告
         
@@ -38,6 +39,7 @@ class ReportService:
             summary: 提示词和响应摘要
             system_prompt: 系统提示词
             metrics: 评估指标（可选）
+            dataset_file: 数据集文件路径（可选）
             
         Returns:
             生成的HTML文件路径，如果失败则返回None
@@ -48,12 +50,21 @@ class ReportService:
         # 确保输出目录存在
         os.makedirs(self.output_dir, exist_ok=True)
         
+        # 如果没有提供评估指标但有数据集文件，则计算评估指标
+        if metrics is None and dataset_file:
+            try:
+                metrics = evaluate_model_predictions(summary, dataset_file)
+                logger.info("已计算评估指标")
+            except Exception as e:
+                logger.error(f"计算评估指标时出错: {e}")
+        
         # 使用模板生成HTML报告
         return generate_html_report(
             summary=summary,
             output_dir=self.output_dir,
             model_name=settings.model_name,
-            system_prompt=system_prompt
+            system_prompt=system_prompt,
+            metrics=metrics
         )
 
     @staticmethod

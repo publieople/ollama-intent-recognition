@@ -200,7 +200,8 @@ class PromptProcessorService:
             "processed_count": len(self.processed_ids),
             "total_count": len(prompts),
             "summary_file": summary_file if settings.save_summary else None,
-            "output_dir": settings.output_dir
+            "output_dir": settings.output_dir,
+            "summary": self.summary
         }
     
     def _save_summary(self, summary_file: str) -> None:
